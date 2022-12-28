@@ -54,7 +54,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app_state: &mut Ap
     }
 }
 
-fn draw_file_list<'a>(title_path: &'a str, files: &'a Vec<String>) -> List<'a> {
+fn draw_file_list<'a>(title_path: &'a str, files: &'a [String]) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {

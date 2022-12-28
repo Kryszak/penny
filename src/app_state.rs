@@ -1,5 +1,5 @@
-use log::debug;
-use std::{fs, path::Path};
+use log::{debug, error};
+use std::{fs, io, path::Path};
 use tui::widgets::ListState;
 
 pub struct AppState {
@@ -20,7 +20,8 @@ pub struct FileViewerList {
 impl FileViewerList {
     pub fn with_directory(dir_name: &str) -> Self {
         FileViewerList {
-            items: FileViewerList::list_directory_content(dir_name),
+            items: FileViewerList::list_directory_content(dir_name)
+                .expect("Failed to open user $HOME directory"),
             state: ListState::default(),
             current_directory: dir_name.to_string(),
             file_viewer_focused: false,
@@ -39,11 +40,12 @@ impl FileViewerList {
                 None => self.current_directory.to_string(),
             };
             self.current_directory = new_path;
-            self.items = FileViewerList::list_directory_content(&self.current_directory);
+            self.items = FileViewerList::list_directory_content(&self.current_directory).unwrap();
             match self.parent_selected_index {
                 Some(_) => self.state.select(self.parent_selected_index),
                 None => self.focus_first_entry_if_available(),
             };
+            self.parent_selected_index = None;
         }
     }
 
@@ -51,17 +53,21 @@ impl FileViewerList {
         if self.file_viewer_focused {
             let maybe_selected_path = self.state.selected().map(|i| &self.items[i]);
 
-            match maybe_selected_path {
-                Some(path) => {
-                    if Path::new(path).is_dir() {
-                        self.parent_selected_index = self.state.selected();
-                        self.current_directory = path.to_string();
-                        self.items =
-                            FileViewerList::list_directory_content(&self.current_directory);
-                        self.focus_first_entry_if_available();
-                    }
+            if let Some(path) = maybe_selected_path {
+                if Path::new(path).is_dir() {
+                    match FileViewerList::list_directory_content(&path.to_string()) {
+                        Ok(items) => {
+                            self.parent_selected_index = self.state.selected();
+                            self.current_directory = path.to_string();
+                            self.items = items;
+                            self.focus_first_entry_if_available();
+                        }
+                        Err(_) => error!(
+                            "Missing permission to list files in directory {}!",
+                            path.to_string()
+                        ),
+                    };
                 }
-                None => {}
             };
         }
     }
@@ -121,15 +127,14 @@ impl FileViewerList {
         }
     }
 
-    fn list_directory_content(dir_name: &str) -> Vec<String> {
-        fs::read_dir(dir_name)
-            .unwrap()
+    fn list_directory_content(dir_name: &str) -> io::Result<Vec<String>> {
+        Ok(fs::read_dir(dir_name)?
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|e| !e.file_name().unwrap().to_string_lossy().starts_with('.'))
             .filter(|e| e.is_dir() || e.file_name().unwrap().to_string_lossy().ends_with(".mp3"))
             .map(|e| e.to_string_lossy().into_owned())
-            .collect::<Vec<String>>()
+            .collect::<Vec<String>>())
     }
 
     fn focus_first_entry_if_available(&mut self) {
