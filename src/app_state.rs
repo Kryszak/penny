@@ -14,6 +14,7 @@ pub struct FileViewerList {
     pub current_directory: String,
     pub file_viewer_focused: bool,
     previously_selected_index: Option<usize>,
+    parent_selected_index: Option<usize>,
 }
 
 impl FileViewerList {
@@ -24,6 +25,7 @@ impl FileViewerList {
             current_directory: dir_name.to_string(),
             file_viewer_focused: false,
             previously_selected_index: None,
+            parent_selected_index: None,
         }
     }
 
@@ -38,7 +40,10 @@ impl FileViewerList {
             };
             self.current_directory = new_path;
             self.items = FileViewerList::list_directory_content(&self.current_directory);
-            self.focus_first_entry_if_available();
+            match self.parent_selected_index {
+                Some(_) => self.state.select(self.parent_selected_index),
+                None => self.focus_first_entry_if_available(),
+            };
         }
     }
 
@@ -49,6 +54,7 @@ impl FileViewerList {
             match maybe_selected_path {
                 Some(path) => {
                     if Path::new(path).is_dir() {
+                        self.parent_selected_index = self.state.selected();
                         self.current_directory = path.to_string();
                         self.items =
                             FileViewerList::list_directory_content(&self.current_directory);
