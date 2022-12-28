@@ -1,44 +1,17 @@
-use std::io;
+use std::{env, io};
 
-use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
-    execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
-};
-use log::LevelFilter;
-use tui::{backend::CrosstermBackend, Terminal};
+use app_state::FileViewerList;
 
 mod app;
 mod app_state;
 mod ui;
 
-fn main() -> Result<(), io::Error> {
-    let stdout = io::stdout();
-    enable_raw_mode()?;
-    // Configure log
-    tui_logger::init_logger(LevelFilter::Debug).unwrap();
-    tui_logger::set_default_level(log::LevelFilter::Debug);
+fn main() -> io::Result<()> {
+    let mut app_state = crate::app_state::AppState {
+        help_visible: true,
+        logs_visible: false,
+        file_list: FileViewerList::with_directory(&env::var("HOME").unwrap()),
+    };
 
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::new(backend)?;
-    execute!(
-        terminal.backend_mut(),
-        EnterAlternateScreen,
-        EnableMouseCapture
-    )?;
-
-    terminal.clear()?;
-    terminal.hide_cursor()?;
-
-    app::run_app(&mut terminal)?;
-
-    terminal.clear()?;
-    terminal.show_cursor()?;
-    disable_raw_mode()?;
-    execute!(
-        terminal.backend_mut(),
-        LeaveAlternateScreen,
-        DisableMouseCapture
-    )?;
-    Ok(())
+    app::run_app(&mut app_state)
 }

@@ -1,27 +1,41 @@
 use std::{io, time::Duration};
 
-use crossterm::event::{self, KeyCode};
-use log::info;
-use tui::{backend::Backend, Terminal};
+use crossterm::{
+    event::{self, DisableMouseCapture, EnableMouseCapture, KeyCode},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use log::{info, LevelFilter};
+use tui::{backend::CrosstermBackend, Terminal};
 
-use crate::{ui, app_state::FileViewerList};
+use crate::{app_state::AppState, ui};
 
-pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
-    let mut app_state = crate::app_state::AppState {
-        help_visible: true,
-        logs_visible: false,
-        file_list: FileViewerList::with_directory("/home/kryszak/storage"),
-    };
+pub fn run_app(app_state: &mut AppState) -> io::Result<()> {
+    let stdout = io::stdout();
+    enable_raw_mode()?;
+    // Configure log
+    tui_logger::init_logger(LevelFilter::Debug).unwrap();
+    tui_logger::set_default_level(log::LevelFilter::Debug);
 
+    let backend = CrosstermBackend::new(stdout);
+    let mut terminal = Terminal::new(backend)?;
+    execute!(
+        terminal.backend_mut(),
+        EnterAlternateScreen,
+        EnableMouseCapture
+    )?;
+
+    terminal.clear()?;
+    terminal.hide_cursor()?;
     info!("Welcome to penny!");
 
     loop {
-        terminal.draw(|f| ui::ui(f, &mut app_state))?;
+        terminal.draw(|f| ui::ui(f, app_state))?;
 
         if crossterm::event::poll(Duration::from_millis(200)).unwrap() {
             if let event::Event::Key(key) = event::read().unwrap() {
                 match key.code {
-                    KeyCode::Char('q') => return Ok(()),
+                    KeyCode::Char('q') => break,
                     KeyCode::Char('h') => app_state.help_visible = !app_state.help_visible,
                     KeyCode::Char('l') => app_state.logs_visible = !app_state.logs_visible,
                     KeyCode::Left => app_state.file_list.go_directory_up(),
@@ -34,4 +48,15 @@ pub fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
             }
         }
     }
+
+    terminal.clear()?;
+    terminal.show_cursor()?;
+    disable_raw_mode()?;
+    execute!(
+        terminal.backend_mut(),
+        LeaveAlternateScreen,
+        DisableMouseCapture
+    )?;
+
+    Ok(())
 }

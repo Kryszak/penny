@@ -77,11 +77,13 @@ fn draw_help_panel<'a>() -> Paragraph<'a> {
         Spans::from("h: Toogle help"),
         Spans::from("l: Toggle logs"),
         Spans::from("f: Focus file viewer"),
-        Spans::from("   \u{2190}: Directory up"),
-        Spans::from("   \u{2192}: Enter directory"),
-        Spans::from("   \u{2191}: Select file up"),
-        Spans::from("   \u{2193}: Select file down"),
         Spans::from("q: Quit"),
+        Spans::from(""),
+        Spans::from(Span::styled("File viewer only", Style::default().add_modifier(Modifier::BOLD))),
+        Spans::from("\u{2190}: Directory up"),
+        Spans::from("\u{2192}: Enter directory"),
+        Spans::from("\u{2191}: Select file up"),
+        Spans::from("\u{2193}: Select file down"),
     ];
 
     Paragraph::new(help_text.clone())
