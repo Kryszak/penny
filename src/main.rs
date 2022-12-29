@@ -1,7 +1,6 @@
-use std::io;
-
 use app::App;
 use runner::run_app;
+use std::io;
 
 mod app;
 mod input;

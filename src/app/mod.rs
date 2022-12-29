@@ -1,12 +1,12 @@
 pub mod app_state;
-pub mod ui;
 pub mod file_viewer;
+pub mod ui;
 
-use std::env;
-
-use crossterm::event::KeyCode;
+use crate::input::events::KeyPress;
 
 use self::{app_state::AppState, file_viewer::FileViewerList};
+use crossterm::event::KeyCode;
+use std::env;
 
 pub use ui::ui;
 
@@ -31,8 +31,8 @@ impl App {
         }
     }
 
-    pub fn do_action(&mut self, key_code: KeyCode) -> AppActionResult {
-        match key_code {
+    pub fn do_action(&mut self, key_press: KeyPress) -> AppActionResult {
+        match key_press.key {
             KeyCode::Char('q') => return AppActionResult::Exit,
             KeyCode::Char('h') => self.state.help_visible = !self.state.help_visible,
             KeyCode::Char('l') => self.state.logs_visible = !self.state.logs_visible,

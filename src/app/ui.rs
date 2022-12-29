@@ -1,5 +1,5 @@
+use super::{app_state::FileEntry, App};
 use std::vec;
-
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -9,8 +9,6 @@ use tui::{
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
-
-use super::{App, app_state::FileEntry};
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let main_view_constraint = Constraint::Max(80);
@@ -59,7 +57,8 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
-            ListItem::new(Spans::from(Span::styled(&x.name, Style::default()))).style(Style::default())
+            ListItem::new(Spans::from(Span::styled(&x.name, Style::default())))
+                .style(Style::default())
         })
         .collect();
 

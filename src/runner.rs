@@ -1,17 +1,15 @@
-use std::{io, time::Duration};
-
+use crate::{
+    app::{ui, App, AppActionResult::Exit},
+    input::{Events, InputEvent},
+};
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use log::{info, LevelFilter};
+use std::{io, time::Duration};
 use tui::{backend::CrosstermBackend, Terminal};
-
-use crate::{
-    app::{ui, App, AppActionResult::Exit},
-    input::{Events, InputEvent},
-};
 
 pub fn run_app(app_state: &mut App) -> io::Result<()> {
     let stdout = io::stdout();
