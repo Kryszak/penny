@@ -1,6 +1,5 @@
 use std::vec;
 
-use crate::app_state::AppState;
 use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -11,9 +10,11 @@ use tui::{
 };
 use tui_logger::TuiLoggerWidget;
 
-pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
+use super::{App, app_state::FileEntry};
+
+pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let main_view_constraint = Constraint::Max(80);
-    let logs_view_constraint = match app_state.logs_visible {
+    let logs_view_constraint = match app.state.logs_visible {
         true => Constraint::Percentage(20),
         false => Constraint::Length(0),
     };
@@ -23,15 +24,15 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app_state: &mut AppState) {
         .constraints([main_view_constraint, logs_view_constraint].as_ref())
         .split(f.size());
 
-    if app_state.logs_visible {
+    if app.state.logs_visible {
         f.render_widget(draw_log_view(), chunks[1]);
     }
 
-    render_main_view(f, chunks[0], app_state);
+    render_main_view(f, chunks[0], app);
 }
 
-fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app_state: &mut AppState) {
-    let help_constraint = match app_state.help_visible {
+fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
+    let help_constraint = match app.state.help_visible {
         true => Constraint::Percentage(15),
         false => Constraint::Length(0),
     };
@@ -43,22 +44,22 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app_state: &mut Ap
 
     // File explorer
     f.render_stateful_widget(
-        draw_file_list(&app_state.file_list.current_directory, &app_state.file_list.items),
+        draw_file_list(&app.file_list.current_directory, &app.file_list.items),
         main_view[0],
-        &mut app_state.file_list.state,
+        &mut app.file_list.state,
     );
 
     // Help
-    if app_state.help_visible {
+    if app.state.help_visible {
         f.render_widget(draw_help_panel(), main_view[1]);
     }
 }
 
-fn draw_file_list<'a>(title_path: &'a str, files: &'a [String]) -> List<'a> {
+fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
-            ListItem::new(Spans::from(Span::styled(x, Style::default()))).style(Style::default())
+            ListItem::new(Spans::from(Span::styled(&x.name, Style::default()))).style(Style::default())
         })
         .collect();
 
@@ -79,7 +80,10 @@ fn draw_help_panel<'a>() -> Paragraph<'a> {
         Spans::from("f: Focus file viewer"),
         Spans::from("q: Quit"),
         Spans::from(""),
-        Spans::from(Span::styled("File viewer only", Style::default().add_modifier(Modifier::BOLD))),
+        Spans::from(Span::styled(
+            "File viewer only",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
         Spans::from("\u{2190}: Directory up"),
         Spans::from("\u{2192}: Enter directory"),
         Spans::from("\u{2191}: Select file up"),
@@ -111,5 +115,7 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
         )
         .style(Style::default())
         .output_target(false)
+        .output_line(false)
+        .output_file(false)
         .output_separator(' ')
 }

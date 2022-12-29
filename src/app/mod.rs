@@ -1,0 +1,49 @@
+pub mod app_state;
+pub mod ui;
+pub mod file_viewer;
+
+use std::env;
+
+use crossterm::event::KeyCode;
+
+use self::{app_state::AppState, file_viewer::FileViewerList};
+
+pub use ui::ui;
+
+pub enum AppActionResult {
+    Continue,
+    Exit,
+}
+
+pub struct App {
+    pub state: AppState,
+    pub file_list: FileViewerList,
+}
+
+impl App {
+    pub fn new() -> Self {
+        App {
+            state: AppState {
+                help_visible: true,
+                logs_visible: true,
+            },
+            file_list: FileViewerList::with_directory(&env::var("HOME").unwrap()),
+        }
+    }
+
+    pub fn do_action(&mut self, key_code: KeyCode) -> AppActionResult {
+        match key_code {
+            KeyCode::Char('q') => return AppActionResult::Exit,
+            KeyCode::Char('h') => self.state.help_visible = !self.state.help_visible,
+            KeyCode::Char('l') => self.state.logs_visible = !self.state.logs_visible,
+            KeyCode::Left => self.file_list.go_directory_up(),
+            KeyCode::Down => self.file_list.next(),
+            KeyCode::Up => self.file_list.previous(),
+            KeyCode::Right => self.file_list.enter_directory(),
+            KeyCode::Char('f') => self.file_list.focus(),
+            _ => {}
+        };
+
+        AppActionResult::Continue
+    }
+}

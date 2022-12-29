@@ -1,16 +1,14 @@
-use log::{debug, error};
-use std::{fs, io, path::Path};
+use std::{path::Path, fs, io};
+
+use log::{error, debug};
 use tui::widgets::ListState;
 
-pub struct AppState {
-    pub help_visible: bool,
-    pub logs_visible: bool,
-    pub file_list: FileViewerList,
-}
+use super::app_state::FileEntry;
+
 
 pub struct FileViewerList {
     pub state: ListState,
-    pub items: Vec<String>,
+    pub items: Vec<FileEntry>,
     pub current_directory: String,
     pub file_viewer_focused: bool,
     previously_selected_index: Option<usize>,
@@ -51,20 +49,20 @@ impl FileViewerList {
 
     pub fn enter_directory(&mut self) {
         if self.file_viewer_focused {
-            let maybe_selected_path = self.state.selected().map(|i| &self.items[i]);
+            let maybe_selected_entry = self.state.selected().map(|i| &self.items[i]);
 
-            if let Some(path) = maybe_selected_path {
-                if Path::new(path).is_dir() {
-                    match FileViewerList::list_directory_content(&path.to_string()) {
+            if let Some(entry) = maybe_selected_entry {
+                if Path::new(&entry.path).is_dir() {
+                    match FileViewerList::list_directory_content(&entry.path) {
                         Ok(items) => {
                             self.parent_selected_index = self.state.selected();
-                            self.current_directory = path.to_string();
+                            self.current_directory = entry.path.clone();
                             self.items = items;
                             self.focus_first_entry_if_available();
                         }
                         Err(_) => error!(
                             "Missing permission to list files in directory {}!",
-                            path.to_string()
+                            entry.path
                         ),
                     };
                 }
@@ -127,14 +125,18 @@ impl FileViewerList {
         }
     }
 
-    fn list_directory_content(dir_name: &str) -> io::Result<Vec<String>> {
-        Ok(fs::read_dir(dir_name)?
+    fn list_directory_content(dir_name: &str) -> io::Result<Vec<FileEntry>> {
+        let mut file_list = fs::read_dir(dir_name)?
             .filter_map(|e| e.ok())
             .map(|e| e.path())
             .filter(|e| !e.file_name().unwrap().to_string_lossy().starts_with('.'))
             .filter(|e| e.is_dir() || e.file_name().unwrap().to_string_lossy().ends_with(".mp3"))
-            .map(|e| e.to_string_lossy().into_owned())
-            .collect::<Vec<String>>())
+            .map(|e| FileEntry::new(&e))
+            .collect::<Vec<_>>();
+
+        file_list.sort_by(|a, b| a.name.cmp(&b.name));
+
+        Ok(file_list)
     }
 
     fn focus_first_entry_if_available(&mut self) {
