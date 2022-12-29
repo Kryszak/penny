@@ -49,7 +49,10 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
 
     // Help
     if app.state.help_visible {
-        f.render_widget(draw_help_panel(), main_view[1]);
+        f.render_widget(
+            draw_help_panel(app.file_list.file_viewer_focused),
+            main_view[1],
+        );
     }
 }
 
@@ -72,23 +75,28 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
         .highlight_symbol("> ")
 }
 
-fn draw_help_panel<'a>() -> Paragraph<'a> {
-    let help_text = vec![
+fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
+    let mut help_text = vec![
         Spans::from("h: Toogle help"),
         Spans::from("l: Toggle logs"),
         Spans::from("f: Focus file viewer"),
         Spans::from("q: Quit"),
-        Spans::from(""),
-        Spans::from(Span::styled(
-            "File viewer only",
-            Style::default().add_modifier(Modifier::BOLD),
-        )),
-        Spans::from("\u{2190}: Directory up"),
-        Spans::from("\u{2192}: Enter directory"),
-        Spans::from("\u{2191}: Select file up"),
-        Spans::from("\u{2193}: Select file down"),
     ];
 
+    if show_file_viewer_help {
+        let mut file_viewer_help_text = vec![
+            Spans::from(""),
+            Spans::from(Span::styled(
+                "File viewer",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+            Spans::from("\u{2190}: Directory up"),
+            Spans::from("\u{2192}: Enter directory"),
+            Spans::from("\u{2191}: Select file up"),
+            Spans::from("\u{2193}: Select file down"),
+        ];
+        help_text.append(&mut file_viewer_help_text);
+    }
     Paragraph::new(help_text.clone())
         .block(
             Block::default()
