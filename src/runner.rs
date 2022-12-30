@@ -15,7 +15,7 @@ use tui::{backend::CrosstermBackend, Terminal};
 pub async fn run_app(app_state: &Arc<Mutex<App>>) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
-    // Configure log
+
     tui_logger::init_logger(LevelFilter::Debug).unwrap();
     tui_logger::set_default_level(log::LevelFilter::Debug);
 

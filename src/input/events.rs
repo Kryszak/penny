@@ -7,7 +7,7 @@ use std::{
     },
     time::Duration,
 };
-use tokio::sync::mpsc::{Receiver, Sender};
+use tokio::sync::mpsc::Receiver;
 
 pub struct KeyPress {
     pub key: KeyCode,
@@ -24,16 +24,12 @@ impl KeyPress {
 }
 
 pub enum InputEvent {
-    /// An input event occurred.
     Input(KeyPress),
-    /// An tick event occurred.
     Tick,
 }
 
 pub struct Events {
     rx: Receiver<InputEvent>,
-    // Need to be kept around to prevent disposing the sender side.
-    _tx: Sender<InputEvent>,
     stop_capture: Arc<AtomicBool>,
 }
 
@@ -66,15 +62,9 @@ impl Events {
             }
         });
 
-        Events {
-            rx,
-            _tx: tx,
-            stop_capture,
-        }
+        Events { rx, stop_capture }
     }
 
-    /// Attempts to read an event.
-    /// This function block the current thread.
     pub async fn next(&mut self) -> InputEvent {
         self.rx.recv().await.unwrap_or(InputEvent::Tick)
     }

@@ -22,9 +22,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .constraints([main_view_constraint, logs_view_constraint].as_ref())
         .split(f.size());
 
-    if app.state.logs_visible {
-        f.render_widget(draw_log_view(), chunks[1]);
-    }
+    f.render_widget(draw_log_view(), chunks[1]);
 
     render_main_view(f, chunks[0], app);
 }
@@ -40,12 +38,20 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
         .constraints([Constraint::Min(85), help_constraint].as_ref())
         .split(area);
 
+    let player_block = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
+        .split(main_view[0]);
+
     // File explorer
     f.render_stateful_widget(
         draw_file_list(&app.file_list.current_directory, &app.file_list.items),
-        main_view[0],
+        player_block[0],
         &mut app.file_list.state,
     );
+
+    // Player
+    f.render_widget(draw_player_panel(), player_block[1]);
 
     // Help
     f.render_widget(draw_help_panel(app.state.file_viewer_focused), main_view[1]);
@@ -68,6 +74,13 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
                 .add_modifier(Modifier::BOLD),
         )
         .highlight_symbol("> ")
+}
+
+fn draw_player_panel<'a>() -> Block<'a> {
+    Block::default()
+        .title("Track")
+        .style(Style::default())
+        .borders(Borders::ALL)
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
