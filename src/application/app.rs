@@ -1,6 +1,4 @@
-use super::{AppState, FileViewerList};
-use crate::input::events::KeyPress;
-use crossterm::event::KeyCode;
+use super::{actions::Action, AppState, FileViewerList};
 use std::env;
 
 pub enum AppActionResult {
@@ -19,22 +17,29 @@ impl App {
             state: AppState {
                 help_visible: true,
                 logs_visible: true,
+                file_viewer_focused: false,
             },
             file_list: FileViewerList::with_directory(&env::var("HOME").unwrap()),
         }
     }
 
-    pub fn do_action(&mut self, key_press: KeyPress) -> AppActionResult {
-        match key_press.key {
-            KeyCode::Char('q') => return AppActionResult::Exit,
-            KeyCode::Char('h') => self.state.help_visible = !self.state.help_visible,
-            KeyCode::Char('l') => self.state.logs_visible = !self.state.logs_visible,
-            KeyCode::Left => self.file_list.go_directory_up(),
-            KeyCode::Down => self.file_list.next(),
-            KeyCode::Up => self.file_list.previous(),
-            KeyCode::Right => self.file_list.enter_directory(),
-            KeyCode::Char('f') => self.file_list.focus(),
-            _ => {}
+    pub fn do_action(&mut self, action: Action) -> AppActionResult {
+        match action {
+            Action::Quit => return AppActionResult::Exit,
+            Action::ToggleHelp => self.state.help_visible = !self.state.help_visible,
+            Action::ToggleLogs => self.state.logs_visible = !self.state.logs_visible,
+            Action::FocusFileViewer => {
+                self.state.file_viewer_focused = !self.state.file_viewer_focused;
+                self.file_list.focus();
+            }
+            Action::FileViewerUp
+            | Action::FileViewerDown
+            | Action::FileViewerDirUp
+            | Action::FileViewerEnterDir => {
+                if self.state.file_viewer_focused {
+                    self.file_list.do_action(action);
+                }
+            }
         };
 
         AppActionResult::Continue

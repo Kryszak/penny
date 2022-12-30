@@ -1,5 +1,5 @@
 use crate::{
-    application::{ui, App, AppActionResult::Exit},
+    application::{actions::Actions, ui, App, AppActionResult::Exit},
     input::{Events, InputEvent},
 };
 use crossterm::{
@@ -40,10 +40,16 @@ pub async fn run_app(app_state: &Arc<Mutex<App>>) -> io::Result<()> {
 
         match events.next().await {
             InputEvent::Input(key_code) => {
-                if let Exit = app.do_action(key_code) {
-                    events.close();
-                    break;
-                }
+                let action = Actions::from(key_code);
+                match action {
+                    Some(a) => {
+                        if let Exit = app.do_action(a) {
+                            events.close();
+                            break;
+                        }
+                    }
+                    None => {}
+                };
             }
             InputEvent::Tick => {}
         };

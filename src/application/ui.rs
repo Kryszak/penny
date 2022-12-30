@@ -48,10 +48,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     );
 
     // Help
-    f.render_widget(
-        draw_help_panel(app.file_list.file_viewer_focused),
-        main_view[1],
-    );
+    f.render_widget(draw_help_panel(app.state.file_viewer_focused), main_view[1]);
 }
 
 fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {

@@ -1,4 +1,4 @@
-use super::FileEntry;
+use super::{actions::Action, FileEntry};
 use log::{debug, error};
 use std::{fs, io, path::Path};
 use tui::widgets::ListState;
@@ -7,7 +7,6 @@ pub struct FileViewerList {
     pub state: ListState,
     pub items: Vec<FileEntry>,
     pub current_directory: String,
-    pub file_viewer_focused: bool,
     previously_selected_index: Option<usize>,
     parent_selected_index: Option<usize>,
 }
@@ -19,106 +18,105 @@ impl FileViewerList {
                 .expect("Failed to open user $HOME directory"),
             state: ListState::default(),
             current_directory: dir_name.to_string(),
-            file_viewer_focused: false,
             previously_selected_index: None,
             parent_selected_index: None,
         }
     }
 
-    pub fn go_directory_up(&mut self) {
-        if self.file_viewer_focused {
-            let path = Path::new(&self.current_directory)
-                .parent()
-                .map(|dir| dir.to_string_lossy().into_owned());
-            let new_path = match path {
-                Some(x) => x,
-                None => self.current_directory.to_string(),
-            };
-            self.current_directory = new_path;
-            self.items = FileViewerList::list_directory_content(&self.current_directory).unwrap();
-            match self.parent_selected_index {
-                Some(_) => self.state.select(self.parent_selected_index),
-                None => self.focus_first_entry_if_available(),
-            };
-            self.parent_selected_index = None;
-        }
-    }
-
-    pub fn enter_directory(&mut self) {
-        if self.file_viewer_focused {
-            let maybe_selected_entry = self.state.selected().map(|i| &self.items[i]);
-
-            if let Some(entry) = maybe_selected_entry {
-                if Path::new(&entry.path).is_dir() {
-                    match FileViewerList::list_directory_content(&entry.path) {
-                        Ok(items) => {
-                            self.parent_selected_index = self.state.selected();
-                            self.current_directory = entry.path.clone();
-                            self.items = items;
-                            self.focus_first_entry_if_available();
-                        }
-                        Err(_) => error!(
-                            "Missing permission to list files in directory {}!",
-                            entry.path
-                        ),
-                    };
-                }
-            };
-        }
-    }
-
-    pub fn next(&mut self) {
-        if self.file_viewer_focused {
-            let i = match self.state.selected() {
-                Some(i) => {
-                    if i >= self.items.len() - 1 {
-                        0
-                    } else {
-                        i + 1
-                    }
-                }
-                None => 0,
-            };
-            if !self.items.is_empty() {
-                self.state.select(Some(i));
-            }
-        }
-    }
-
-    pub fn previous(&mut self) {
-        if self.file_viewer_focused {
-            let i = match self.state.selected() {
-                Some(i) => {
-                    if i == 0 {
-                        self.items.len() - 1
-                    } else {
-                        i - 1
-                    }
-                }
-                None => 0,
-            };
-            if !self.items.is_empty() {
-                self.state.select(Some(i));
-            }
+    pub fn do_action(&mut self, action: Action) {
+        match action {
+            Action::FileViewerUp => self.previous(),
+            Action::FileViewerDown => self.next(),
+            Action::FileViewerDirUp => self.go_directory_up(),
+            Action::FileViewerEnterDir => self.enter_directory(),
+            _ => panic!("Unsupported file viewer action: {:?}", action),
         }
     }
 
     pub fn focus(&mut self) {
-        match self.file_viewer_focused {
-            true => {
-                self.file_viewer_focused = false;
+        match self.state.selected() {
+            Some(_) => {
                 self.previously_selected_index = self.state.selected();
                 self.state = ListState::default();
                 debug!("File viewer lost focus");
             }
-            false => {
-                self.file_viewer_focused = true;
+            None => {
                 match self.previously_selected_index {
                     Some(_) => self.state.select(self.previously_selected_index),
                     None => self.focus_first_entry_if_available(),
                 }
                 debug!("File viewer received focus");
             }
+        };
+    }
+
+    fn go_directory_up(&mut self) {
+        let path = Path::new(&self.current_directory)
+            .parent()
+            .map(|dir| dir.to_string_lossy().into_owned());
+        let new_path = match path {
+            Some(x) => x,
+            None => self.current_directory.to_string(),
+        };
+        self.current_directory = new_path;
+        self.items = FileViewerList::list_directory_content(&self.current_directory).unwrap();
+        match self.parent_selected_index {
+            Some(_) => self.state.select(self.parent_selected_index),
+            None => self.focus_first_entry_if_available(),
+        };
+        self.parent_selected_index = None;
+    }
+
+    fn enter_directory(&mut self) {
+        let maybe_selected_entry = self.state.selected().map(|i| &self.items[i]);
+
+        if let Some(entry) = maybe_selected_entry {
+            if Path::new(&entry.path).is_dir() {
+                match FileViewerList::list_directory_content(&entry.path) {
+                    Ok(items) => {
+                        self.parent_selected_index = self.state.selected();
+                        self.current_directory = entry.path.clone();
+                        self.items = items;
+                        self.focus_first_entry_if_available();
+                    }
+                    Err(_) => error!(
+                        "Missing permission to list files in directory {}!",
+                        entry.path
+                    ),
+                };
+            }
+        };
+    }
+
+    fn next(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i >= self.items.len() - 1 {
+                    0
+                } else {
+                    i + 1
+                }
+            }
+            None => 0,
+        };
+        if !self.items.is_empty() {
+            self.state.select(Some(i));
+        }
+    }
+
+    fn previous(&mut self) {
+        let i = match self.state.selected() {
+            Some(i) => {
+                if i == 0 {
+                    self.items.len() - 1
+                } else {
+                    i - 1
+                }
+            }
+            None => 0,
+        };
+        if !self.items.is_empty() {
+            self.state.select(Some(i));
         }
     }
 
