@@ -1,14 +1,9 @@
-pub mod app_state;
-pub mod file_viewer;
-pub mod ui;
-
-use crate::input::events::KeyPress;
-
-use self::{app_state::AppState, file_viewer::FileViewerList};
 use crossterm::event::KeyCode;
 use std::env;
 
-pub use ui::ui;
+use crate::input::events::KeyPress;
+
+use super::{file_viewer::FileViewerList, AppState};
 
 pub enum AppActionResult {
     Continue,

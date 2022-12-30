@@ -1,5 +1,5 @@
 use crate::{
-    app::{ui, App, AppActionResult::Exit},
+    application::{ui, App, AppActionResult::Exit},
     input::{Events, InputEvent},
 };
 use crossterm::{

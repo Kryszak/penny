@@ -1,8 +1,8 @@
-use app::App;
+use application::App;
 use runner::run_app;
 use std::io;
 
-mod app;
+mod application;
 mod input;
 mod runner;
 
