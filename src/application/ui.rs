@@ -1,4 +1,4 @@
-use super::{app_state::FileEntry, App};
+use super::{App, FileEntry};
 use std::vec;
 use tui::{
     backend::Backend,

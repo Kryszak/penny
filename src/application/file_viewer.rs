@@ -1,4 +1,4 @@
-use super::app_state::FileEntry;
+use super::FileEntry;
 use log::{debug, error};
 use std::{fs, io, path::Path};
 use tui::widgets::ListState;

@@ -1,9 +1,7 @@
+use super::{AppState, FileViewerList};
+use crate::input::events::KeyPress;
 use crossterm::event::KeyCode;
 use std::env;
-
-use crate::input::events::KeyPress;
-
-use super::{file_viewer::FileViewerList, AppState};
 
 pub enum AppActionResult {
     Continue,
