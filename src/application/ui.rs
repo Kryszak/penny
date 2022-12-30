@@ -1,4 +1,5 @@
-use super::{App, FileEntry};
+use super::App;
+use crate::{files::FileEntry, player::Mp3Player};
 use std::vec;
 use tui::{
     backend::Backend,
@@ -51,7 +52,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     );
 
     // Player
-    f.render_widget(draw_player_panel(), player_block[1]);
+    f.render_widget(draw_player_panel(&mut app.player), player_block[1]);
 
     // Help
     f.render_widget(draw_help_panel(app.state.file_viewer_focused), main_view[1]);
@@ -76,18 +77,34 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
         .highlight_symbol("> ")
 }
 
-fn draw_player_panel<'a>() -> Block<'a> {
-    Block::default()
-        .title("Track")
-        .style(Style::default())
-        .borders(Borders::ALL)
+fn draw_player_panel<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
+    let mut lines: Vec<Spans> = vec![];
+    if let Some(text) = player.song.as_ref() {
+        lines = text
+            .metadata
+            .display()
+            .into_iter()
+            .map(Spans::from)
+            .collect();
+    }
+    Paragraph::new(lines)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .style(Style::default().add_modifier(Modifier::BOLD))
+                .title("Player"),
+        )
+        .style(Style::default().remove_modifier(Modifier::BOLD))
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
     let mut help_text = vec![
         Spans::from("h: Toogle help"),
         Spans::from("l: Toggle logs"),
-        Spans::from("f: Focus file viewer"),
+        Spans::from("f: Focus file"),
+        Spans::from("viewer"),
+        Spans::from("Enter: Play selected"),
+        Spans::from("file"),
         Spans::from("q: Quit"),
     ];
 

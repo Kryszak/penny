@@ -1,4 +1,5 @@
-use super::{actions::Action, AppState, FileViewerList};
+use super::{actions::Action, AppState};
+use crate::{files::FileViewerList, player::Mp3Player};
 use std::env;
 
 pub enum AppActionResult {
@@ -9,6 +10,7 @@ pub enum AppActionResult {
 pub struct App {
     pub state: AppState,
     pub file_list: FileViewerList,
+    pub player: Mp3Player,
 }
 
 impl App {
@@ -20,6 +22,7 @@ impl App {
                 file_viewer_focused: false,
             },
             file_list: FileViewerList::with_directory(&env::var("HOME").unwrap()),
+            player: Mp3Player::new(),
         }
     }
 
@@ -38,6 +41,13 @@ impl App {
             | Action::FileViewerEnterDir => {
                 if self.state.file_viewer_focused {
                     self.file_list.do_action(action);
+                }
+            }
+            Action::SelectSongFile => {
+                if let Some(file_entry) = self.file_list.get_selected_file_entry() {
+                    if file_entry.is_file {
+                        self.player.set_song_file(file_entry);
+                    }
                 }
             }
         };

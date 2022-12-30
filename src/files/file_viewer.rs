@@ -1,7 +1,10 @@
-use super::{actions::Action, FileEntry};
 use log::{debug, error};
 use std::{fs, io, path::Path};
 use tui::widgets::ListState;
+
+use crate::application::actions::Action;
+
+use super::FileEntry;
 
 pub struct FileViewerList {
     pub state: ListState,
@@ -48,6 +51,10 @@ impl FileViewerList {
                 debug!("File viewer received focus");
             }
         };
+    }
+
+    pub fn get_selected_file_entry(&self) -> Option<&FileEntry> {
+        self.state.selected().map(|i| &self.items[i])
     }
 
     fn go_directory_up(&mut self) {

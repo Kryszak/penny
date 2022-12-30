@@ -11,6 +11,7 @@ pub enum Action {
     FileViewerDown,
     FileViewerDirUp,
     FileViewerEnterDir,
+    SelectSongFile,
 }
 
 pub struct Actions;
@@ -26,6 +27,7 @@ impl Actions {
             KeyCode::Up => Some(Action::FileViewerUp),
             KeyCode::Right => Some(Action::FileViewerEnterDir),
             KeyCode::Char('f') => Some(Action::FocusFileViewer),
+            KeyCode::Enter => Some(Action::SelectSongFile),
             _ => None,
         }
     }

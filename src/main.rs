@@ -6,6 +6,8 @@ use tokio::sync::Mutex;
 mod application;
 mod input;
 mod runner;
+mod player;
+mod files;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
