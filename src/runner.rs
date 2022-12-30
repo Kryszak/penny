@@ -40,16 +40,12 @@ pub async fn run_app(app_state: &Arc<Mutex<App>>) -> io::Result<()> {
 
         match events.next().await {
             InputEvent::Input(key_code) => {
-                let action = Actions::from(key_code);
-                match action {
-                    Some(a) => {
-                        if let Exit = app.do_action(a) {
-                            events.close();
-                            break;
-                        }
+                if let Some(action) = Actions::from(key_code) {
+                    if let Exit = app.do_action(action) {
+                        events.close();
+                        break;
                     }
-                    None => {}
-                };
+                }
             }
             InputEvent::Tick => {}
         };

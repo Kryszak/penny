@@ -38,7 +38,7 @@ impl Events {
         let (tx, rx) = tokio::sync::mpsc::channel(100);
         let stop_capture = Arc::new(AtomicBool::new(false));
 
-        let event_tx = tx.clone();
+        let event_tx = tx;
         let event_stop_capture = stop_capture.clone();
         tokio::spawn(async move {
             loop {
