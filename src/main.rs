@@ -1,13 +1,17 @@
 use application::App;
 use runner::run_app;
-use std::io;
+use std::{io, sync::Arc};
+use tokio::sync::Mutex;
 
 mod application;
 mod input;
 mod runner;
 
-fn main() -> io::Result<()> {
-    let mut app = App::new();
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    let app = Arc::new(Mutex::new(App::new()));
 
-    run_app(&mut app)
+    run_app(&app).await?;
+
+    Ok(())
 }

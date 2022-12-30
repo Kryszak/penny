@@ -8,5 +8,5 @@ pub use app::AppActionResult;
 pub use app_state::AppState;
 pub use ui::ui;
 
-use file_viewer::FileViewerList;
 use app_state::FileEntry;
+use file_viewer::FileViewerList;

@@ -8,10 +8,11 @@ use crossterm::{
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use log::{info, LevelFilter};
-use std::{io, time::Duration};
+use std::{io, sync::Arc, time::Duration};
+use tokio::sync::Mutex;
 use tui::{backend::CrosstermBackend, Terminal};
 
-pub fn run_app(app_state: &mut App) -> io::Result<()> {
+pub async fn run_app(app_state: &Arc<Mutex<App>>) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
     // Configure log
@@ -31,14 +32,16 @@ pub fn run_app(app_state: &mut App) -> io::Result<()> {
     info!("Welcome to penny!");
 
     let tick_rate = Duration::from_millis(200);
-    let events = Events::new(tick_rate);
+    let mut events = Events::new(tick_rate);
 
     loop {
-        terminal.draw(|f| ui(f, app_state))?;
+        let mut app = app_state.lock().await;
+        terminal.draw(|f| ui(f, &mut app))?;
 
-        match events.next().unwrap() {
+        match events.next().await {
             InputEvent::Input(key_code) => {
-                if let Exit = app_state.do_action(key_code) {
+                if let Exit = app.do_action(key_code) {
+                    events.close();
                     break;
                 }
             }

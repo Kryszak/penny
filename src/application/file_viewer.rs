@@ -3,7 +3,6 @@ use log::{debug, error};
 use std::{fs, io, path::Path};
 use tui::widgets::ListState;
 
-
 pub struct FileViewerList {
     pub state: ListState,
     pub items: Vec<FileEntry>,

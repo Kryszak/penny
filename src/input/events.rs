@@ -1,9 +1,13 @@
 use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers};
+use log::error;
 use std::{
-    sync::mpsc::{channel, Receiver, RecvError, Sender},
-    thread,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
     time::Duration,
 };
+use tokio::sync::mpsc::{Receiver, Sender};
 
 pub struct KeyPress {
     pub key: KeyCode,
@@ -30,33 +34,52 @@ pub struct Events {
     rx: Receiver<InputEvent>,
     // Need to be kept around to prevent disposing the sender side.
     _tx: Sender<InputEvent>,
+    stop_capture: Arc<AtomicBool>,
 }
 
 impl Events {
     pub fn new(tick_rate: Duration) -> Events {
-        let (tx, rx) = channel();
+        let (tx, rx) = tokio::sync::mpsc::channel(100);
+        let stop_capture = Arc::new(AtomicBool::new(false));
 
-        let event_tx = tx.clone(); // the thread::spawn own event_tx
-        thread::spawn(move || {
+        let event_tx = tx.clone();
+        let event_stop_capture = stop_capture.clone();
+        tokio::spawn(async move {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
                 if crossterm::event::poll(tick_rate).unwrap() {
                     if let event::Event::Key(key_event) = event::read().unwrap() {
-                        event_tx
+                        if let Err(err) = event_tx
                             .send(InputEvent::Input(KeyPress::new(key_event)))
-                            .unwrap();
+                            .await
+                        {
+                            error!("Failed to send KeyPress event, {}", err);
+                        }
                     }
                 }
-                event_tx.send(InputEvent::Tick).unwrap();
+                if let Err(err) = event_tx.send(InputEvent::Tick).await {
+                    error!("Failed to send Tick event, {}", err);
+                }
+                if event_stop_capture.load(Ordering::Relaxed) {
+                    break;
+                }
             }
         });
 
-        Events { rx, _tx: tx }
+        Events {
+            rx,
+            _tx: tx,
+            stop_capture,
+        }
     }
 
     /// Attempts to read an event.
     /// This function block the current thread.
-    pub fn next(&self) -> Result<InputEvent, RecvError> {
-        self.rx.recv()
+    pub async fn next(&mut self) -> InputEvent {
+        self.rx.recv().await.unwrap_or(InputEvent::Tick)
+    }
+
+    pub fn close(&mut self) {
+        self.stop_capture.store(true, Ordering::Relaxed)
     }
 }
