@@ -30,13 +30,13 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     let help_constraint = match app.state.help_visible {
-        true => Constraint::Percentage(15),
+        true => Constraint::Percentage(20),
         false => Constraint::Length(0),
     };
 
     let main_view = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(85), help_constraint].as_ref())
+        .constraints([Constraint::Min(80), help_constraint].as_ref())
         .split(area);
 
     let player_block = Layout::default()
@@ -101,10 +101,8 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
     let mut help_text = vec![
         Spans::from("h: Toogle help"),
         Spans::from("l: Toggle logs"),
-        Spans::from("f: Focus file"),
-        Spans::from("viewer"),
-        Spans::from("Enter: Play selected"),
-        Spans::from("file"),
+        Spans::from("f: Focus file viewer"),
+        Spans::from("Enter: Play selected file"),
         Spans::from("q: Quit"),
     ];
 

@@ -50,6 +50,7 @@ impl App {
                     }
                 }
             }
+            Action::TogglePlayback => self.player.handle_action(action),
         };
 
         AppActionResult::Continue
