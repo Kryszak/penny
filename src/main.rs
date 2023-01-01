@@ -4,16 +4,19 @@ use std::{io, sync::Arc};
 use tokio::sync::Mutex;
 
 mod application;
-mod input;
-mod runner;
-mod player;
 mod files;
+mod input;
+mod player;
+mod runner;
 
 #[tokio::main]
 async fn main() -> io::Result<()> {
-    let app = Arc::new(Mutex::new(App::new()));
-
-    run_app(&app).await?;
+    match App::new() {
+        Some(app) => {
+            run_app(&Arc::new(Mutex::new(app))).await?;
+        }
+        None => {println!("Failed to open $HOME directory, terminating.")}
+    };
 
     Ok(())
 }

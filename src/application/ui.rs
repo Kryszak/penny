@@ -23,9 +23,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
         .constraints([main_view_constraint, logs_view_constraint].as_ref())
         .split(f.size());
 
-    f.render_widget(draw_log_view(), chunks[1]);
+    let (main_view_area, logs_area) = (chunks[0], chunks[1]);
 
-    render_main_view(f, chunks[0], app);
+    render_main_view(f, main_view_area, app);
+
+    f.render_widget(draw_log_view(), logs_area);
 }
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
@@ -39,23 +41,25 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
         .constraints([Constraint::Min(80), help_constraint].as_ref())
         .split(area);
 
-    let player_block = Layout::default()
+    let split_area = Layout::default()
         .direction(Direction::Horizontal)
         .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
         .split(main_view[0]);
 
+    let (file_viewer_area, player_area, help_area) = (split_area[0], split_area[1], main_view[1]);
+
     // File explorer
     f.render_stateful_widget(
         draw_file_list(&app.file_list.current_directory, &app.file_list.items),
-        player_block[0],
+        file_viewer_area,
         &mut app.file_list.state,
     );
 
     // Player
-    f.render_widget(draw_player_panel(&mut app.player), player_block[1]);
+    f.render_widget(draw_player_panel(&mut app.player), player_area);
 
     // Help
-    f.render_widget(draw_help_panel(app.state.file_viewer_focused), main_view[1]);
+    f.render_widget(draw_help_panel(app.state.file_viewer_focused), help_area);
 }
 
 fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
@@ -102,9 +106,20 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
         Spans::from("h: Toogle help"),
         Spans::from("l: Toggle logs"),
         Spans::from("f: Focus file viewer"),
-        Spans::from("Enter: Play selected file"),
+        Spans::from("\u{23CE}: Play selected file"),
         Spans::from("q: Quit"),
     ];
+
+    let mut player_help = vec![
+        Spans::from(""),
+        Spans::from(Span::styled(
+            "Player",
+            Style::default().add_modifier(Modifier::BOLD),
+        )),
+        Spans::from("p: Play/Pause"),
+    ];
+
+    help_text.append(&mut player_help);
 
     if show_file_viewer_help {
         let mut file_viewer_help_text = vec![

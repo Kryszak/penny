@@ -14,15 +14,19 @@ pub struct App {
 }
 
 impl App {
-    pub fn new() -> Self {
-        App {
-            state: AppState {
-                help_visible: true,
-                logs_visible: true,
-                file_viewer_focused: false,
-            },
-            file_list: FileViewerList::with_directory(&env::var("HOME").unwrap()),
-            player: Mp3Player::new(),
+    pub fn new() -> Option<Self> {
+        match env::var("HOME").map(|p| FileViewerList::with_directory(&p)) {
+            Ok(file_list) => Some(App {
+                state: AppState {
+                    help_visible: true,
+                    logs_visible: true,
+                    file_viewer_focused: false,
+                    initialized: true,
+                },
+                file_list,
+                player: Mp3Player::new(),
+            }),
+            Err(_) => None,
         }
     }
 
