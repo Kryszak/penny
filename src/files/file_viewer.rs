@@ -18,7 +18,7 @@ impl FileViewerList {
     pub fn with_directory(dir_name: &str) -> Self {
         FileViewerList {
             items: FileViewerList::list_directory_content(dir_name)
-                .expect(&format!("Failed to open {} directory", dir_name).to_string()),
+                .unwrap_or_else(|_| panic!("{}", format!("Failed to open {} directory", dir_name))),
             state: ListState::default(),
             current_directory: dir_name.to_string(),
             previously_selected_index: None,
