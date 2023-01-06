@@ -12,3 +12,5 @@ tui-logger = "0.8.1"
 log = "0.4.17"
 tokio = { version = "1.23.0", features = ["full"] }
 id3 = "1.5.1"
+rodio = "0.16.0"
+minimp3 = "0.5.1"

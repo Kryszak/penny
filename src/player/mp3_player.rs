@@ -1,6 +1,9 @@
 use super::{metadata::Mp3Metadata, MetadataReader};
-use crate::{application::actions::Action, files::FileEntry};
+use crate::{application::actions::Action, files::FileEntry, player::FrameDecoder};
 use log::{debug, error};
+use minimp3::{Decoder, Error};
+use rodio::{OutputStream, Sink};
+use std::fs::File;
 
 pub struct SelectedSongFile {
     pub metadata: Mp3Metadata,
@@ -20,12 +23,6 @@ enum PlayerState {
     SongSelected,
     Playing,
     Paused,
-}
-
-impl PlayerState {
-    fn can_start_playback(&self) -> bool {
-        *self == PlayerState::SongSelected || *self == PlayerState::Paused
-    }
 }
 
 pub struct Mp3Player {
@@ -54,16 +51,44 @@ impl Mp3Player {
         }
     }
 
+    fn play(&mut self) {
+        let mut decoder =
+            Decoder::new(File::open(&self.song.as_ref().unwrap().metadata.file_path).unwrap());
+        // TODO add controls for play/pause
+        tokio::spawn(async move {
+            let (_stream, stream_handle) = OutputStream::try_default().unwrap();
+            let sink = Sink::try_new(&stream_handle).unwrap();
+            loop {
+                match decoder.next_frame() {
+                    Ok(frame) => {
+                        let source = FrameDecoder::new(frame);
+                        sink.append(source);
+                    }
+                    Err(Error::Eof) => break,
+                    Err(e) => {
+                        error!("{:?}", e);
+                        break;
+                    }
+                }
+            }
+            sink.sleep_until_end();
+        });
+    }
+
     fn toggle_playback(&mut self) {
-        if self.state.can_start_playback() {
+        if self.state == PlayerState::SongSelected {
             debug!(
                 "Starting playback of {:?}",
                 self.song.as_ref().unwrap().metadata.display()
             );
+            self.play();
             self.state = PlayerState::Playing;
         } else if self.state == PlayerState::Playing {
             self.state = PlayerState::Paused;
             debug!("Paused playback");
+        } else if self.state == PlayerState::Paused {
+            self.state = PlayerState::Playing;
+            debug!("Resumed playback");
         }
     }
 }
