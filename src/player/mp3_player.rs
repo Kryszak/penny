@@ -3,7 +3,14 @@ use crate::{application::actions::Action, files::FileEntry, player::FrameDecoder
 use log::{debug, error};
 use minimp3::{Decoder, Error};
 use rodio::{OutputStream, Sink};
-use std::fs::File;
+use std::{
+    fs::File,
+    sync::{
+        atomic::{AtomicBool, Ordering},
+        Arc,
+    },
+    time::Duration,
+};
 
 pub struct SelectedSongFile {
     pub metadata: Mp3Metadata,
@@ -28,6 +35,7 @@ enum PlayerState {
 pub struct Mp3Player {
     pub song: Option<SelectedSongFile>,
     state: PlayerState,
+    paused: Arc<AtomicBool>,
 }
 
 impl Mp3Player {
@@ -35,6 +43,7 @@ impl Mp3Player {
         Mp3Player {
             song: None,
             state: PlayerState::New,
+            paused: Arc::new(AtomicBool::new(false)),
         }
     }
 
@@ -54,11 +63,12 @@ impl Mp3Player {
     fn play(&mut self) {
         let mut decoder =
             Decoder::new(File::open(&self.song.as_ref().unwrap().metadata.file_path).unwrap());
-        // TODO add controls for play/pause
+        let paused = self.paused.clone();
         tokio::spawn(async move {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             loop {
+                while paused.load(std::sync::atomic::Ordering::Relaxed) {}
                 match decoder.next_frame() {
                     Ok(frame) => {
                         let source = FrameDecoder::new(frame);
@@ -70,8 +80,10 @@ impl Mp3Player {
                         break;
                     }
                 }
+                // to keep playback thread alive until the end
+                std::thread::sleep(Duration::from_millis(20));
             }
-            sink.sleep_until_end();
+            // TODO change player status to 'SongSelected' here
         });
     }
 
@@ -85,9 +97,11 @@ impl Mp3Player {
             self.state = PlayerState::Playing;
         } else if self.state == PlayerState::Playing {
             self.state = PlayerState::Paused;
+            self.paused.store(true, Ordering::Relaxed);
             debug!("Paused playback");
         } else if self.state == PlayerState::Paused {
             self.state = PlayerState::Playing;
+            self.paused.store(false, Ordering::Relaxed);
             debug!("Resumed playback");
         }
     }
