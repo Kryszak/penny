@@ -1,7 +1,8 @@
-use super::{metadata::Mp3Metadata, MetadataReader};
-use crate::{application::actions::Action, files::FileEntry, player::FrameDecoder};
+use crate::{
+    application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
+};
 use log::{debug, error};
-use minimp3::{Decoder, Error};
+use minimp3::{Decoder, Error, Frame};
 use rodio::{OutputStream, Sink};
 use std::{
     fs::File,
@@ -11,18 +12,6 @@ use std::{
     },
     time::Duration,
 };
-
-pub struct SelectedSongFile {
-    pub metadata: Mp3Metadata,
-}
-
-impl SelectedSongFile {
-    fn new(file_entry: &FileEntry) -> Self {
-        SelectedSongFile {
-            metadata: MetadataReader::read_metadata(file_entry).unwrap(),
-        }
-    }
-}
 
 #[derive(PartialEq)]
 enum PlayerState {
@@ -36,6 +25,7 @@ pub struct Mp3Player {
     pub song: Option<SelectedSongFile>,
     state: PlayerState,
     paused: Arc<AtomicBool>,
+    frames: Vec<Frame>,
 }
 
 impl Mp3Player {
@@ -44,11 +34,13 @@ impl Mp3Player {
             song: None,
             state: PlayerState::New,
             paused: Arc::new(AtomicBool::new(false)),
+            frames: vec![],
         }
     }
 
     pub fn set_song_file(&mut self, file_entry: &FileEntry) {
-        self.song = Some(SelectedSongFile::new(file_entry));
+        self.frames = Mp3Player::read_mp3_frames(&file_entry.path);
+        self.song = Some(SelectedSongFile::new(file_entry, self.get_track_duration()));
         self.state = PlayerState::SongSelected;
         self.toggle_playback();
     }
@@ -61,37 +53,48 @@ impl Mp3Player {
     }
 
     fn play(&mut self) {
-        let mut decoder =
-            Decoder::new(File::open(&self.song.as_ref().unwrap().metadata.file_path).unwrap());
         let paused = self.paused.clone();
+        let frame_duration = self.get_frame_duration();
+        let mut frames_iterator = self.frames.clone().into_iter();
         tokio::spawn(async move {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             loop {
                 while paused.load(std::sync::atomic::Ordering::Relaxed) {}
-                match decoder.next_frame() {
-                    Ok(frame) => {
+                match frames_iterator.next() {
+                    Some(frame) => {
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }
-                    Err(Error::Eof) => break,
-                    Err(e) => {
-                        error!("{:?}", e);
-                        break;
-                    }
+                    None => break,
                 }
-                // to keep playback thread alive until the end
-                std::thread::sleep(Duration::from_millis(20));
+                std::thread::sleep(frame_duration);
             }
             // TODO change player status to 'SongSelected' here
         });
+    }
+
+    fn get_track_duration(&self) -> Duration {
+        let first_frame = &self.frames[0];
+        let sample_rate = first_frame.sample_rate;
+        let samples_per_frame = first_frame.data.len() / first_frame.channels;
+        let duration = (samples_per_frame as i32 * self.frames.len() as i32) / sample_rate;
+
+        Duration::from_secs(duration.try_into().unwrap())
+    }
+
+    fn get_frame_duration(&self) -> Duration {
+        let first_frame = &self.frames[0];
+        let frame_duration = (first_frame.data.len() as f64 / first_frame.channels as f64)
+            / first_frame.sample_rate as f64;
+        Duration::from_millis((frame_duration * 1024.0) as u64)
     }
 
     fn toggle_playback(&mut self) {
         if self.state == PlayerState::SongSelected {
             debug!(
                 "Starting playback of {:?}",
-                self.song.as_ref().unwrap().metadata.display()
+                self.song.as_ref().unwrap().display()
             );
             self.play();
             self.state = PlayerState::Playing;
@@ -104,5 +107,24 @@ impl Mp3Player {
             self.paused.store(false, Ordering::Relaxed);
             debug!("Resumed playback");
         }
+    }
+
+    fn read_mp3_frames(file_path: &str) -> Vec<Frame> {
+        let mut decoder = Decoder::new(File::open(file_path).unwrap());
+        let mut frames: Vec<Frame> = vec![];
+        loop {
+            match decoder.next_frame() {
+                Ok(frame) => {
+                    frames.push(frame);
+                }
+                Err(Error::Eof) => break,
+                Err(e) => {
+                    error!("{:?}", e);
+                    break;
+                }
+            }
+        }
+
+        frames
     }
 }

@@ -17,18 +17,6 @@ impl Mp3Metadata {
         }
     }
 
-    pub fn display(&self) -> Vec<String> {
-        let mut formatted = vec![];
-        if let Some(a) = &self.artist {
-            formatted.push(format!("Artist: {}", a));
-        }
-        match &self.title {
-            Some(t) => formatted.push(format!("Title : {}", t)),
-            None => formatted.push(format!("Title : {}", self.file_path)),
-        }
-
-        formatted
-    }
 }
 
 pub struct MetadataReader;

@@ -84,12 +84,7 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
 fn draw_player_panel<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
     let mut lines: Vec<Spans> = vec![];
     if let Some(text) = player.song.as_ref() {
-        lines = text
-            .metadata
-            .display()
-            .into_iter()
-            .map(Spans::from)
-            .collect();
+        lines = text.display().into_iter().map(Spans::from).collect();
     }
     Paragraph::new(lines)
         .block(

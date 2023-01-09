@@ -1,9 +1,7 @@
-use std::time::Duration;
-
 use minimp3::Frame;
 use rodio::Source;
+use std::time::Duration;
 
-#[derive(Debug)]
 pub struct FrameDecoder {
     frame: Frame,
     current_frame_offset: usize,
