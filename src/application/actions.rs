@@ -13,6 +13,7 @@ pub enum Action {
     FileViewerEnterDir,
     SelectSongFile,
     TogglePlayback,
+    StopPlayback,
 }
 
 pub struct Actions;
@@ -30,6 +31,7 @@ impl Actions {
             KeyCode::Char('f') => Some(Action::FocusFileViewer),
             KeyCode::Enter => Some(Action::SelectSongFile),
             KeyCode::Char('p') => Some(Action::TogglePlayback),
+            KeyCode::Char('s') => Some(Action::StopPlayback),
             _ => None,
         }
     }

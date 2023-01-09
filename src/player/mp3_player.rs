@@ -8,7 +8,7 @@ use std::{
     fs::File,
     sync::{
         atomic::{AtomicBool, Ordering},
-        Arc,
+        Arc, Mutex,
     },
     time::Duration,
 };
@@ -23,8 +23,9 @@ enum PlayerState {
 
 pub struct Mp3Player {
     pub song: Option<SelectedSongFile>,
-    state: PlayerState,
+    state: Arc<Mutex<PlayerState>>,
     paused: Arc<AtomicBool>,
+    stop: Arc<AtomicBool>,
     frames: Vec<Frame>,
 }
 
@@ -32,35 +33,51 @@ impl Mp3Player {
     pub fn new() -> Self {
         Mp3Player {
             song: None,
-            state: PlayerState::New,
+            state: Arc::new(Mutex::new(PlayerState::New)),
             paused: Arc::new(AtomicBool::new(false)),
+            stop: Arc::new(AtomicBool::new(false)),
             frames: vec![],
         }
     }
 
     pub fn set_song_file(&mut self, file_entry: &FileEntry) {
+        // TODO stop currently played song if any is played
         self.frames = Mp3Player::read_mp3_frames(&file_entry.path);
         self.song = Some(SelectedSongFile::new(file_entry, self.get_track_duration()));
-        self.state = PlayerState::SongSelected;
+        {
+            let mut state = self.state.lock().unwrap();
+            *state = PlayerState::SongSelected;
+        }
         self.toggle_playback();
     }
 
     pub fn handle_action(&mut self, action: Action) {
         match action {
             Action::TogglePlayback => self.toggle_playback(),
+            Action::StopPlayback => self.stop_playback(),
             _ => error!("Action {:?} is not supported for Mp3Player!", action),
         }
     }
 
     fn play(&mut self) {
         let paused = self.paused.clone();
+        let should_stop = self.stop.clone();
+        let player_state = self.state.clone();
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
         tokio::spawn(async move {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             loop {
-                while paused.load(std::sync::atomic::Ordering::Relaxed) {}
+                if should_stop.load(Ordering::Relaxed) {
+                    break;
+                }
+                while paused.load(Ordering::Relaxed) {
+                    if should_stop.load(Ordering::Relaxed) {
+                        paused.store(false, Ordering::Relaxed);
+                        break;
+                    }
+                }
                 match frames_iterator.next() {
                     Some(frame) => {
                         let source = FrameDecoder::new(frame);
@@ -70,8 +87,21 @@ impl Mp3Player {
                 }
                 std::thread::sleep(frame_duration);
             }
+            should_stop.store(false, Ordering::Relaxed);
+            paused.store(false, Ordering::Relaxed);
+            debug!("Song playback finished.");
+            let mut state = player_state.lock().unwrap();
+            *state = PlayerState::SongSelected;
             // TODO change player status to 'SongSelected' here
         });
+    }
+
+    fn stop_playback(&mut self) {
+        {
+            let mut state = self.state.lock().unwrap();
+            *state = PlayerState::SongSelected;
+        }
+        self.stop.store(true, Ordering::Relaxed);
     }
 
     fn get_track_duration(&self) -> Duration {
@@ -91,7 +121,9 @@ impl Mp3Player {
     }
 
     fn toggle_playback(&mut self) {
-        match self.state {
+        let state_mutex = self.state.clone();
+        let mut state = state_mutex.lock().unwrap();
+        match *state {
             PlayerState::New => trace!("Nothing in player yet, skipping."),
             PlayerState::SongSelected => {
                 debug!(
@@ -99,15 +131,15 @@ impl Mp3Player {
                     self.song.as_ref().unwrap().display()
                 );
                 self.play();
-                self.state = PlayerState::Playing;
+                *state = PlayerState::Playing;
             }
             PlayerState::Playing => {
-                self.state = PlayerState::Paused;
+                *state = PlayerState::Paused;
                 self.paused.store(true, Ordering::Relaxed);
                 debug!("Paused playback");
             }
             PlayerState::Paused => {
-                self.state = PlayerState::Playing;
+                *state = PlayerState::Playing;
                 self.paused.store(false, Ordering::Relaxed);
                 debug!("Resumed playback");
             }
