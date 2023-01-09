@@ -1,7 +1,7 @@
 use crate::{
     application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
 };
-use log::{debug, error};
+use log::{debug, error, trace};
 use minimp3::{Decoder, Error, Frame};
 use rodio::{OutputStream, Sink};
 use std::{
@@ -91,21 +91,26 @@ impl Mp3Player {
     }
 
     fn toggle_playback(&mut self) {
-        if self.state == PlayerState::SongSelected {
-            debug!(
-                "Starting playback of {:?}",
-                self.song.as_ref().unwrap().display()
-            );
-            self.play();
-            self.state = PlayerState::Playing;
-        } else if self.state == PlayerState::Playing {
-            self.state = PlayerState::Paused;
-            self.paused.store(true, Ordering::Relaxed);
-            debug!("Paused playback");
-        } else if self.state == PlayerState::Paused {
-            self.state = PlayerState::Playing;
-            self.paused.store(false, Ordering::Relaxed);
-            debug!("Resumed playback");
+        match self.state {
+            PlayerState::New => trace!("Nothing in player yet, skipping."),
+            PlayerState::SongSelected => {
+                debug!(
+                    "Starting playback of {:?}",
+                    self.song.as_ref().unwrap().display()
+                );
+                self.play();
+                self.state = PlayerState::Playing;
+            }
+            PlayerState::Playing => {
+                self.state = PlayerState::Paused;
+                self.paused.store(true, Ordering::Relaxed);
+                debug!("Paused playback");
+            }
+            PlayerState::Paused => {
+                self.state = PlayerState::Playing;
+                self.paused.store(false, Ordering::Relaxed);
+                debug!("Resumed playback");
+            }
         }
     }
 
