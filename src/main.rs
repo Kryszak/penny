@@ -9,11 +9,10 @@ mod input;
 mod player;
 mod runner;
 
-#[tokio::main]
-async fn main() -> io::Result<()> {
+fn main() -> io::Result<()> {
     match App::new() {
         Some(mut app) => {
-            run_app(&mut app).await?;
+            run_app(&mut app)?;
         }
         None => {
             println!("Failed to open $HOME directory, terminating.")

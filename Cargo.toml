@@ -3,14 +3,11 @@ name = "penny"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
 tui = "0.19"
 crossterm = "0.25"
 tui-logger = "0.8.1"
 log = "0.4.17"
-tokio = { version = "1.23.0", features = ["full"] }
 id3 = "1.5.1"
 rodio = "0.16.0"
 minimp3 = "0.5.1"

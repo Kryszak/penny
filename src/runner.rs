@@ -11,7 +11,7 @@ use log::{info, LevelFilter};
 use std::{io, time::Duration};
 use tui::{backend::CrosstermBackend, Terminal};
 
-pub async fn run_app(app: &mut App) -> io::Result<()> {
+pub fn run_app(app: &mut App) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
 
@@ -36,7 +36,7 @@ pub async fn run_app(app: &mut App) -> io::Result<()> {
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        match events.next().await {
+        match events.next() {
             InputEvent::Input(key_code) => {
                 if let Some(action) = Actions::from(key_code) {
                     if let Exit = app.do_action(action) {

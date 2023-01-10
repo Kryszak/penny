@@ -10,6 +10,7 @@ use std::{
         atomic::{AtomicBool, Ordering},
         Arc, Mutex,
     },
+    thread,
     time::Duration,
 };
 
@@ -75,7 +76,7 @@ impl Mp3Player {
         let player_state = self.state.clone();
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
-        tokio::spawn(async move {
+        thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             loop {
