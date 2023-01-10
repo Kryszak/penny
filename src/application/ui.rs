@@ -6,7 +6,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph},
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
@@ -56,7 +56,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     );
 
     // Player
-    f.render_widget(draw_player_panel(&mut app.player), player_area);
+    draw_player_panel(f, &mut app.player, player_area);
 
     // Help
     f.render_widget(draw_help_panel(app.state.file_viewer_focused), help_area);
@@ -81,19 +81,52 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
         .highlight_symbol("> ")
 }
 
-fn draw_player_panel<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
+fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area: Rect) {
+    let view = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Percentage(10),
+                Constraint::Percentage(85),
+                Constraint::Percentage(5),
+            ]
+            .as_ref(),
+        )
+        .margin(1)
+        .split(area);
+
+    let (song_info_area, progress_bar_area) = (view[0], view[2]);
+
+    f.render_widget(Block::default().borders(Borders::ALL).title("Player"), area);
+
+    // Song info
+    f.render_widget(draw_song_info(player), song_info_area);
+    // Song progress bar
+    f.render_widget(draw_song_progress(player), progress_bar_area);
+}
+
+fn draw_song_info<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
     let mut lines: Vec<Spans> = vec![];
     if let Some(text) = player.display_information() {
         lines = text.into_iter().map(Spans::from).collect();
     }
     Paragraph::new(lines)
-        .block(
-            Block::default()
-                .borders(Borders::ALL)
-                .style(Style::default().add_modifier(Modifier::BOLD))
-                .title("Player"),
-        )
-        .style(Style::default().remove_modifier(Modifier::BOLD))
+        .block(Block::default())
+        .style(Style::default())
+}
+
+fn draw_song_progress<'a>(player: &Mp3Player) -> Gauge<'a> {
+    let label = player.get_text_progress().unwrap_or(String::from(""));
+    Gauge::default()
+        .block(Block::default())
+        .gauge_style(Style::default().fg(Color::Cyan))
+        .ratio(player.get_current_song_percentage_progress())
+        .label(Span::styled(
+            label,
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        ))
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
@@ -112,6 +145,7 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
             Style::default().add_modifier(Modifier::BOLD),
         )),
         Spans::from("p: Play/Pause"),
+        Spans::from("s: Stop"),
     ];
 
     help_text.append(&mut player_help);

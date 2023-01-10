@@ -27,8 +27,8 @@ enum PlayerState {
 
 // TODO should all fields in Arcs be moved to one struct in one Arc?
 pub struct Mp3Player {
-    pub song: Option<SelectedSongFile>,
-    pub current_playback_elapsed: Arc<Mutex<f64>>,
+    pub current_playback_ms_elapsed: Arc<Mutex<f64>>,
+    song: Option<SelectedSongFile>,
     state: Arc<Mutex<PlayerState>>,
     paused: Arc<AtomicBool>,
     stop: Arc<AtomicBool>,
@@ -43,15 +43,13 @@ impl Mp3Player {
             paused: Arc::new(AtomicBool::new(false)),
             stop: Arc::new(AtomicBool::new(false)),
             frames: vec![],
-            current_playback_elapsed: Arc::new(Mutex::new(0.0)),
+            current_playback_ms_elapsed: Arc::new(Mutex::new(0.0)),
         }
     }
 
     pub fn set_song_file(&mut self, file_entry: &FileEntry) {
         {
-            let mut state = self.state.lock().unwrap();
-            *state = PlayerState::SongSelected;
-            match *state {
+            match *self.state.lock().unwrap() {
                 PlayerState::Playing | PlayerState::Paused => {
                     self.stop.store(true, Ordering::Relaxed);
                 }
@@ -77,22 +75,32 @@ impl Mp3Player {
     }
 
     pub fn display_information(&mut self) -> Option<Vec<String>> {
-        return match &self.song {
-            Some(song_info) => {
-                let mut info: Vec<String> = vec![];
-                info.append(&mut song_info.display());
-                info.push(format!(
-                    "Progress: {} / {}",
-                    Duration::from_secs(
-                        (*self.current_playback_elapsed.lock().unwrap() / 1000.0) as u64
-                    )
-                    .format(DurationFormat::MmSs),
-                    song_info.duration.format(DurationFormat::MmSs)
-                ));
-                Some(info)
-            }
+        match &self.song {
+            Some(song_info) => Some(song_info.display()),
             None => None,
-        };
+        }
+    }
+
+    pub fn get_current_song_percentage_progress(&self) -> f64 {
+        match &self.song {
+            Some(s) => {
+                let current_progress_mutex = self.get_song_elapsed_seconds();
+                let song_length = s.duration.as_secs();
+                (current_progress_mutex / (song_length as f64)).min(1.0)
+            }
+            None => 0.0,
+        }
+    }
+
+    pub fn get_text_progress(&self) -> Option<String> {
+        self.song.as_ref().map(|s| {
+            format!(
+                "{} / {}",
+                Duration::from_secs(self.get_song_elapsed_seconds() as u64)
+                    .format(DurationFormat::MmSs),
+                s.duration.format(DurationFormat::MmSs)
+            )
+        })
     }
 
     fn play(&mut self) {
@@ -101,7 +109,7 @@ impl Mp3Player {
         let player_state = self.state.clone();
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
-        let playback_progress = self.current_playback_elapsed.clone();
+        let playback_progress = self.current_playback_ms_elapsed.clone();
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
@@ -203,5 +211,9 @@ impl Mp3Player {
         }
 
         frames
+    }
+
+    fn get_song_elapsed_seconds(&self) -> f64 {
+        *self.current_playback_ms_elapsed.lock().unwrap() / 1000.0
     }
 }
