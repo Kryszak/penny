@@ -87,8 +87,8 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
         .constraints(
             [
                 Constraint::Percentage(10),
-                Constraint::Percentage(85),
-                Constraint::Percentage(5),
+                Constraint::Percentage(88),
+                Constraint::Percentage(2),
             ]
             .as_ref(),
         )
