@@ -1,12 +1,20 @@
 use std::time::Duration;
 
-pub trait TimeFormatter {
-    fn format(&self) -> String;
+pub enum DurationFormat {
+    MmSs,
 }
 
-impl TimeFormatter for Duration {
-    fn format(&self) -> String {
-        let seconds = self.as_secs();
-        format!("{}:{}", seconds / 60, seconds % 60)
+pub trait DurationFormatter {
+    fn format(&self, format: DurationFormat) -> String;
+}
+
+impl DurationFormatter for Duration {
+    fn format(&self, format: DurationFormat) -> String {
+        match format {
+            DurationFormat::MmSs => {
+                let seconds = self.as_secs();
+                format!("{}:{}", seconds / 60, seconds % 60)
+            }
+        }
     }
 }

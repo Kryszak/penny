@@ -1,4 +1,8 @@
-use super::{duration_formatter::TimeFormatter, metadata::Mp3Metadata, MetadataReader};
+use super::{
+    duration_formatter::{DurationFormat, DurationFormatter},
+    metadata::Mp3Metadata,
+    MetadataReader,
+};
 use crate::files::FileEntry;
 use std::time::Duration;
 
@@ -24,7 +28,10 @@ impl SelectedSongFile {
             Some(t) => formatted.push(format!("Title : {}", t)),
             None => formatted.push(format!("Title : {}", self.metadata.file_path)),
         }
-        formatted.push(format!("Duration: {}", self.duration.format()));
+        formatted.push(format!(
+            "Duration: {}",
+            self.duration.format(DurationFormat::MmSs)
+        ));
 
         formatted
     }

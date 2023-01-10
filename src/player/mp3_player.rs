@@ -1,6 +1,5 @@
 use crate::{
     application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
-    player::TimeFormatter,
 };
 use log::{debug, error, trace};
 use minimp3::{Decoder, Error, Frame};
@@ -15,6 +14,8 @@ use std::{
     thread,
     time::Duration,
 };
+
+use super::duration_formatter::{DurationFormat, DurationFormatter};
 
 #[derive(PartialEq)]
 enum PlayerState {
@@ -82,8 +83,11 @@ impl Mp3Player {
                 info.append(&mut song_info.display());
                 info.push(format!(
                     "Progress: {} / {}",
-                    (*self.current_playback_elapsed.lock().unwrap() / 1000.0) as i32,
-                    song_info.duration.format()
+                    Duration::from_secs(
+                        (*self.current_playback_elapsed.lock().unwrap() / 1000.0) as u64
+                    )
+                    .format(DurationFormat::MmSs),
+                    song_info.duration.format(DurationFormat::MmSs)
                 ));
                 Some(info)
             }
