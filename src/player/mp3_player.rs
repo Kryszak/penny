@@ -41,7 +41,17 @@ impl Mp3Player {
     }
 
     pub fn set_song_file(&mut self, file_entry: &FileEntry) {
-        // TODO stop currently played song if any is played
+        {
+            let mut state = self.state.lock().unwrap();
+            *state = PlayerState::SongSelected;
+            match *state {
+                PlayerState::Playing | PlayerState::Paused => {
+                    self.stop.store(true, Ordering::Relaxed);
+                }
+                _ => {}
+            }
+            while self.stop.load(Ordering::Relaxed) {}
+        }
         self.frames = Mp3Player::read_mp3_frames(&file_entry.path);
         self.song = Some(SelectedSongFile::new(file_entry, self.get_track_duration()));
         {
@@ -92,7 +102,6 @@ impl Mp3Player {
             debug!("Song playback finished.");
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
-            // TODO change player status to 'SongSelected' here
         });
     }
 
