@@ -1,5 +1,9 @@
 use crate::{
-    application::{actions::Actions, ui, App, AppActionResult::Exit},
+    application::{
+        actions::{Action, Actions},
+        ui, App,
+        AppActionResult::Exit,
+    },
     input::{Events, InputEvent},
 };
 use crossterm::{
@@ -40,6 +44,7 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
             InputEvent::Input(key_code) => {
                 if let Some(action) = Actions::from(key_code) {
                     if let Exit = app.do_action(action) {
+                        app.do_action(Action::StopPlayback);
                         events.close();
                         break;
                     }

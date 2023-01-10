@@ -1,8 +1,6 @@
-use std::time::Duration;
-
+use super::{duration_formatter::TimeFormatter, metadata::Mp3Metadata, MetadataReader};
 use crate::files::FileEntry;
-
-use super::{metadata::Mp3Metadata, MetadataReader};
+use std::time::Duration;
 
 pub struct SelectedSongFile {
     pub metadata: Mp3Metadata,
@@ -26,12 +24,7 @@ impl SelectedSongFile {
             Some(t) => formatted.push(format!("Title : {}", t)),
             None => formatted.push(format!("Title : {}", self.metadata.file_path)),
         }
-        let duration_seconds = self.duration.as_secs();
-        formatted.push(format!(
-            "Duration: {}:{}",
-            duration_seconds / 60,
-            duration_seconds % 60
-        ));
+        formatted.push(format!("Duration: {}", self.duration.format()));
 
         formatted
     }

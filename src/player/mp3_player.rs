@@ -1,10 +1,12 @@
 use crate::{
     application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
+    player::TimeFormatter,
 };
 use log::{debug, error, trace};
 use minimp3::{Decoder, Error, Frame};
 use rodio::{OutputStream, Sink};
 use std::{
+    f64,
     fs::File,
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -22,8 +24,10 @@ enum PlayerState {
     Paused,
 }
 
+// TODO should all fields in Arcs be moved to one struct in one Arc?
 pub struct Mp3Player {
     pub song: Option<SelectedSongFile>,
+    pub current_playback_elapsed: Arc<Mutex<f64>>,
     state: Arc<Mutex<PlayerState>>,
     paused: Arc<AtomicBool>,
     stop: Arc<AtomicBool>,
@@ -38,6 +42,7 @@ impl Mp3Player {
             paused: Arc::new(AtomicBool::new(false)),
             stop: Arc::new(AtomicBool::new(false)),
             frames: vec![],
+            current_playback_elapsed: Arc::new(Mutex::new(0.0)),
         }
     }
 
@@ -70,12 +75,29 @@ impl Mp3Player {
         }
     }
 
+    pub fn display_information(&mut self) -> Option<Vec<String>> {
+        return match &self.song {
+            Some(song_info) => {
+                let mut info: Vec<String> = vec![];
+                info.append(&mut song_info.display());
+                info.push(format!(
+                    "Progress: {} / {}",
+                    (*self.current_playback_elapsed.lock().unwrap() / 1000.0) as i32,
+                    song_info.duration.format()
+                ));
+                Some(info)
+            }
+            None => None,
+        };
+    }
+
     fn play(&mut self) {
         let paused = self.paused.clone();
         let should_stop = self.stop.clone();
         let player_state = self.state.clone();
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
+        let playback_progress = self.current_playback_elapsed.clone();
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
@@ -97,9 +119,13 @@ impl Mp3Player {
                     None => break,
                 }
                 std::thread::sleep(frame_duration);
+                {
+                    *playback_progress.lock().unwrap() += frame_duration.as_millis() as f64;
+                }
             }
             should_stop.store(false, Ordering::Relaxed);
             paused.store(false, Ordering::Relaxed);
+            *playback_progress.lock().unwrap() = 0.0;
             debug!("Song playback finished.");
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
