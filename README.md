@@ -11,6 +11,7 @@ Inspiration for the name comes from the [character](https://bulbapedia.bulbagard
 - FFT audio spectrum analysis & display
 - Add tests for modules
 - Github actions pipeline for test running
+- Crate documentation
 
 ## Possible new features
 - Theme support
