@@ -74,6 +74,15 @@ impl Mp3Player {
         }
     }
 
+    pub fn get_playback_status_string(&self) -> String {
+        match *self.state.lock().unwrap() {
+            PlayerState::New => String::from(" \u{231B} "),
+            PlayerState::SongSelected => String::from(" \u{23F9} Stop "),
+            PlayerState::Playing => String::from(" \u{23F5} Playing "),
+            PlayerState::Paused => String::from(" \u{23F8} Paused "),
+        }
+    }
+
     pub fn display_information(&mut self) -> Vec<String> {
         match &self.song {
             Some(song_info) => song_info.display(),

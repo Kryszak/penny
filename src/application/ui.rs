@@ -66,12 +66,17 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
         .iter()
         .map(|x| {
             ListItem::new(Spans::from(Span::styled(&x.name, Style::default())))
-                .style(Style::default())
+                .style(Style::default().remove_modifier(Modifier::BOLD))
         })
         .collect();
 
     List::new(items)
-        .block(Block::default().borders(Borders::ALL).title(title_path))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(title_path)
+                .style(Style::default().add_modifier(Modifier::BOLD)),
+        )
         .highlight_style(
             Style::default()
                 .bg(Color::Cyan)
@@ -96,8 +101,13 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
 
     let (song_info_area, progress_bar_area) = (view[0], view[2]);
 
+    let block_title = player.get_playback_status_string();
+
     f.render_widget(
-        Block::default().borders(Borders::ALL).title("Now playing"),
+        Block::default()
+            .borders(Borders::ALL)
+            .title(block_title)
+            .style(Style::default().add_modifier(Modifier::BOLD)),
         area,
     );
 
@@ -115,7 +125,7 @@ fn draw_song_info<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
         .collect();
     Paragraph::new(lines)
         .block(Block::default())
-        .style(Style::default())
+        .style(Style::default().remove_modifier(Modifier::BOLD))
 }
 
 fn draw_song_progress<'a>(player: &Mp3Player) -> Gauge<'a> {
@@ -190,10 +200,11 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
             Block::default()
                 .title("Logs")
                 .border_style(Style::default())
-                .borders(Borders::ALL),
+                .borders(Borders::ALL)
+                .style(Style::default().add_modifier(Modifier::BOLD)),
         )
         .output_level(None)
-        .style(Style::default())
+        .style(Style::default().remove_modifier(Modifier::BOLD))
         .output_target(false)
         .output_line(false)
         .output_file(false)
