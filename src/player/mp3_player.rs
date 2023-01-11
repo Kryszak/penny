@@ -74,10 +74,10 @@ impl Mp3Player {
         }
     }
 
-    pub fn display_information(&mut self) -> Option<Vec<String>> {
+    pub fn display_information(&mut self) -> Vec<String> {
         match &self.song {
-            Some(song_info) => Some(song_info.display()),
-            None => None,
+            Some(song_info) => song_info.display(),
+            None => vec![String::from("Artist: --"), String::from("Title : --")],
         }
     }
 
@@ -138,7 +138,7 @@ impl Mp3Player {
             should_stop.store(false, Ordering::Relaxed);
             paused.store(false, Ordering::Relaxed);
             *playback_progress.lock().unwrap() = 0.0;
-            debug!("Song playback finished.");
+            debug!("Playback finished.");
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
         });
@@ -174,22 +174,19 @@ impl Mp3Player {
         match *state {
             PlayerState::New => trace!("Nothing in player yet, skipping."),
             PlayerState::SongSelected => {
-                debug!(
-                    "Starting playback of {:?}",
-                    self.song.as_ref().unwrap().display()
-                );
+                debug!("Now playing {:?}", self.song.as_ref().unwrap().display());
                 self.play();
                 *state = PlayerState::Playing;
             }
             PlayerState::Playing => {
                 *state = PlayerState::Paused;
                 self.paused.store(true, Ordering::Relaxed);
-                debug!("Paused playback");
+                trace!("Paused playback");
             }
             PlayerState::Paused => {
                 *state = PlayerState::Playing;
                 self.paused.store(false, Ordering::Relaxed);
-                debug!("Resumed playback");
+                trace!("Resumed playback");
             }
         }
     }

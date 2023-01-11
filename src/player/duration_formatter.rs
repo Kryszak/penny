@@ -13,7 +13,7 @@ impl DurationFormatter for Duration {
         match format {
             DurationFormat::MmSs => {
                 let seconds = self.as_secs();
-                format!("{}:{}", seconds / 60, seconds % 60)
+                format!("{:0>2}:{:0>2}", seconds / 60, seconds % 60)
             }
         }
     }

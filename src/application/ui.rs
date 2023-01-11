@@ -13,40 +13,39 @@ use tui_logger::TuiLoggerWidget;
 
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let main_view_constraint = Constraint::Max(80);
-    let logs_view_constraint = match app.state.logs_visible {
-        true => Constraint::Percentage(20),
-        false => Constraint::Length(0),
-    };
+    let now_playing_view_constraint = Constraint::Percentage(20);
+
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .margin(1)
-        .constraints([main_view_constraint, logs_view_constraint].as_ref())
+        .constraints([main_view_constraint, now_playing_view_constraint].as_ref())
         .split(f.size());
 
-    let (main_view_area, logs_area) = (chunks[0], chunks[1]);
+    let (main_view_area, player_area) = (chunks[0], chunks[1]);
 
     render_main_view(f, main_view_area, app);
 
-    f.render_widget(draw_log_view(), logs_area);
+    // Player
+    draw_player_panel(f, &mut app.player, player_area);
 }
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     let help_constraint = match app.state.help_visible {
-        true => Constraint::Percentage(20),
+        true => Constraint::Percentage(15),
+        false => Constraint::Length(0),
+    };
+
+    let logs_constraint = match app.state.logs_visible {
+        true => Constraint::Percentage(25),
         false => Constraint::Length(0),
     };
 
     let main_view = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(80), help_constraint].as_ref())
+        .constraints([Constraint::Min(60), help_constraint, logs_constraint].as_ref())
         .split(area);
 
-    let split_area = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)].as_ref())
-        .split(main_view[0]);
-
-    let (file_viewer_area, player_area, help_area) = (split_area[0], split_area[1], main_view[1]);
+    let (file_viewer_area, help_area, logs_area) = (main_view[0], main_view[1], main_view[2]);
 
     // File explorer
     f.render_stateful_widget(
@@ -55,11 +54,11 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
         &mut app.file_list.state,
     );
 
-    // Player
-    draw_player_panel(f, &mut app.player, player_area);
-
     // Help
     f.render_widget(draw_help_panel(app.state.file_viewer_focused), help_area);
+
+    // Logs
+    f.render_widget(draw_log_view(), logs_area);
 }
 
 fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
@@ -86,8 +85,8 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
         .direction(Direction::Vertical)
         .constraints(
             [
-                Constraint::Percentage(10),
-                Constraint::Percentage(88),
+                Constraint::Percentage(40),
+                Constraint::Percentage(58),
                 Constraint::Percentage(2),
             ]
             .as_ref(),
@@ -97,7 +96,10 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
 
     let (song_info_area, progress_bar_area) = (view[0], view[2]);
 
-    f.render_widget(Block::default().borders(Borders::ALL).title("Player"), area);
+    f.render_widget(
+        Block::default().borders(Borders::ALL).title("Now playing"),
+        area,
+    );
 
     // Song info
     f.render_widget(draw_song_info(player), song_info_area);
@@ -106,17 +108,20 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
 }
 
 fn draw_song_info<'a>(player: &mut Mp3Player) -> Paragraph<'a> {
-    let mut lines: Vec<Spans> = vec![];
-    if let Some(text) = player.display_information() {
-        lines = text.into_iter().map(Spans::from).collect();
-    }
+    let lines: Vec<Spans> = player
+        .display_information()
+        .into_iter()
+        .map(Spans::from)
+        .collect();
     Paragraph::new(lines)
         .block(Block::default())
         .style(Style::default())
 }
 
 fn draw_song_progress<'a>(player: &Mp3Player) -> Gauge<'a> {
-    let label = player.get_text_progress().unwrap_or(String::from(""));
+    let label = player
+        .get_text_progress()
+        .unwrap_or_else(|| String::from("-/-"));
     Gauge::default()
         .block(Block::default())
         .gauge_style(Style::default().fg(Color::Cyan))
@@ -187,6 +192,7 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
                 .border_style(Style::default())
                 .borders(Borders::ALL),
         )
+        .output_level(None)
         .style(Style::default())
         .output_target(false)
         .output_line(false)

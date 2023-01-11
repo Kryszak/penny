@@ -1,4 +1,4 @@
-use log::{debug, error};
+use log::{error, trace};
 use std::{fs, io, path::Path};
 use tui::widgets::ListState;
 
@@ -41,14 +41,14 @@ impl FileViewerList {
             Some(_) => {
                 self.previously_selected_index = self.state.selected();
                 self.state = ListState::default();
-                debug!("File viewer lost focus");
+                trace!("File viewer lost focus");
             }
             None => {
                 match self.previously_selected_index {
                     Some(_) => self.state.select(self.previously_selected_index),
                     None => self.focus_first_entry_if_available(),
                 }
-                debug!("File viewer received focus");
+                trace!("File viewer received focus");
             }
         };
     }
