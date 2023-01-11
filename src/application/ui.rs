@@ -191,11 +191,31 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
 
 fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
     TuiLoggerWidget::default()
-        .style_error(Style::default().fg(Color::Red))
-        .style_debug(Style::default().fg(Color::Green))
-        .style_warn(Style::default().fg(Color::Yellow))
-        .style_trace(Style::default().fg(Color::Gray))
-        .style_info(Style::default().fg(Color::Blue))
+        .style_error(
+            Style::default()
+                .fg(Color::Red)
+                .remove_modifier(Modifier::BOLD),
+        )
+        .style_debug(
+            Style::default()
+                .fg(Color::Green)
+                .remove_modifier(Modifier::BOLD),
+        )
+        .style_warn(
+            Style::default()
+                .fg(Color::Yellow)
+                .remove_modifier(Modifier::BOLD),
+        )
+        .style_trace(
+            Style::default()
+                .fg(Color::Gray)
+                .remove_modifier(Modifier::BOLD),
+        )
+        .style_info(
+            Style::default()
+                .fg(Color::Blue)
+                .remove_modifier(Modifier::BOLD),
+        )
         .block(
             Block::default()
                 .title("Logs")
@@ -204,7 +224,7 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
                 .style(Style::default().add_modifier(Modifier::BOLD)),
         )
         .output_level(None)
-        .style(Style::default().remove_modifier(Modifier::BOLD))
+        .style(Style::default())
         .output_target(false)
         .output_line(false)
         .output_file(false)
