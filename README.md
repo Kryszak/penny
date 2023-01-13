@@ -1,3 +1,4 @@
+![Build Status](https://github.com/Kryszak/penny/actions/workflows/test.yml/badge.svg)
 # Penny
 Linux Tui MP3 player
 
@@ -9,7 +10,6 @@ Inspiration for the name comes from the [character](https://bulbapedia.bulbagard
 ## TODO
 - FFT audio spectrum analysis & display
 - Add tests for modules
-- Github actions pipeline for test running
 - Crate documentation
 
 ## Possible new features
