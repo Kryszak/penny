@@ -147,7 +147,6 @@ fn draw_song_progress<'a>(player: &Mp3Player) -> Gauge<'a> {
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
     let mut help_text = vec![
         Spans::from("h: Toogle help"),
-        Spans::from("l: Toggle logs"),
         Spans::from("f: Focus file viewer"),
         Spans::from("\u{23CE}: Play selected file"),
         Spans::from("q: Quit"),

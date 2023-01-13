@@ -11,3 +11,4 @@ log = "0.4.17"
 id3 = "1.5.1"
 rodio = "0.16.0"
 minimp3 = "0.5.1"
+clap = { version = "4.0.32", features = ["derive"] }

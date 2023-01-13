@@ -1,5 +1,5 @@
 use super::{actions::Action, AppState};
-use crate::{files::FileViewerList, player::Mp3Player};
+use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
 
 pub enum AppActionResult {
     Continue,
@@ -13,13 +13,17 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(path: &str) -> Option<Self> {
-        FileViewerList::with_directory(path).map(|file_list| App {
+    pub fn new(config: &Config) -> Option<Self> {
+        let log_level = match config.debug {
+            true => log::LevelFilter::Debug,
+            false => log::LevelFilter::Info,
+        };
+        FileViewerList::with_directory(&config.starting_directory).map(|file_list| App {
             state: AppState {
                 help_visible: true,
-                logs_visible: true,
+                logs_visible: config.debug,
                 file_viewer_focused: false,
-                initialized: true,
+                log_level,
             },
             file_list,
             player: Mp3Player::new(),

@@ -9,7 +9,10 @@ use crate::{
 use crossterm::{
     event::{DisableMouseCapture, EnableMouseCapture},
     execute,
-    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+    terminal::{
+        disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
+    },
+    ExecutableCommand,
 };
 use log::{info, LevelFilter};
 use std::{io, time::Duration};
@@ -19,10 +22,11 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
 
-    tui_logger::init_logger(LevelFilter::Debug).unwrap();
-    tui_logger::set_default_level(log::LevelFilter::Debug);
+    tui_logger::init_logger(LevelFilter::Trace).unwrap();
+    tui_logger::set_default_level(app.state.log_level);
 
-    let backend = CrosstermBackend::new(stdout);
+    let mut backend = CrosstermBackend::new(stdout);
+    backend.execute(SetTitle("penny"))?;
     let mut terminal = Terminal::new(backend)?;
     execute!(
         terminal.backend_mut(),
