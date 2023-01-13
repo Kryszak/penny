@@ -10,7 +10,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: awalsh128/cache-apt-pkgs-action@latest
         with:
-          packages: alsa-lib 
+          packages: alsa-lib
           version: 1.0
       - uses: actions-rs/toolchain@v1
         with:
