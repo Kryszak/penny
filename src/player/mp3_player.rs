@@ -25,7 +25,6 @@ enum PlayerState {
     Paused,
 }
 
-// TODO should all fields in Arcs be moved to one struct in one Arc?
 pub struct Mp3Player {
     pub current_playback_ms_elapsed: Arc<Mutex<f64>>,
     song: Option<SelectedSongFile>,
