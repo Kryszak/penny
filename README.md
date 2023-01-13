@@ -7,6 +7,22 @@ This project was created as a personal goal to improve my Rust skills. For now, 
 ## Why Penny?
 Inspiration for the name comes from the [character](https://bulbapedia.bulbagarden.net/wiki/Penny) which battle theme is good and feels misplaced in the same time. 
 
+## Dev dependencies
+For development on Linux OS, alsa development libraries needs to be installed.
+
+### Fedora
+```
+dnf install alsa-lib-devel
+```
+### Arch Linux
+```
+pacman -S alsa-lib
+```
+### Ubuntu
+```
+apt install libasound2
+```
+
 ## TODO
 - FFT audio spectrum analysis & display
 - Add tests for modules
