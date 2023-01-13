@@ -1,4 +1,4 @@
-use std::io;
+use std::{env, io};
 
 use application::App;
 use runner::run_app;
@@ -10,12 +10,16 @@ mod player;
 mod runner;
 
 fn main() -> io::Result<()> {
-    match App::new() {
+    let app = env::var("HOME")
+        .map(String::from)
+        .ok()
+        .and_then(|path| App::new(&path));
+    match app {
         Some(mut app) => {
             run_app(&mut app)?;
         }
         None => {
-            println!("Failed to open $HOME directory, terminating.")
+            println!("Failed to open starting directory, terminating.")
         }
     };
 

@@ -15,15 +15,16 @@ pub struct FileViewerList {
 }
 
 impl FileViewerList {
-    pub fn with_directory(dir_name: &str) -> Self {
-        FileViewerList {
-            items: FileViewerList::list_directory_content(dir_name)
-                .unwrap_or_else(|_| panic!("Failed to open {} directory", dir_name)),
-            state: ListState::default(),
-            current_directory: dir_name.to_string(),
-            previously_selected_index: None,
-            parent_selected_index: None,
-        }
+    pub fn with_directory(dir_name: &str) -> Option<Self> {
+        FileViewerList::list_directory_content(dir_name)
+            .map(|entries| FileViewerList {
+                items: entries,
+                state: ListState::default(),
+                current_directory: dir_name.to_string(),
+                previously_selected_index: None,
+                parent_selected_index: None,
+            })
+            .ok()
     }
 
     pub fn do_action(&mut self, action: Action) {

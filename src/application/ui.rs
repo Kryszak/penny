@@ -228,5 +228,6 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
         .output_target(false)
         .output_line(false)
         .output_file(false)
+        .output_timestamp(None)
         .output_separator(' ')
 }
