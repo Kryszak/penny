@@ -1,5 +1,5 @@
 #[cfg(test)]
-mod file_entry_test {
+mod tests {
     use std::path::Path;
 
     use crate::files::FileEntry;

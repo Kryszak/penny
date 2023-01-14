@@ -1,7 +1,7 @@
 use crate::{
     application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
 };
-use log::{debug, error, trace};
+use log::{debug, error};
 use minimp3::{Decoder, Error, Frame};
 use rodio::{OutputStream, Sink};
 use std::{
@@ -26,7 +26,7 @@ enum PlayerState {
 }
 
 pub struct Mp3Player {
-    pub current_playback_ms_elapsed: Arc<Mutex<f64>>,
+    current_playback_ms_elapsed: Arc<Mutex<f64>>,
     song: Option<SelectedSongFile>,
     state: Arc<Mutex<PlayerState>>,
     paused: Arc<AtomicBool>,
@@ -152,11 +152,30 @@ impl Mp3Player {
         });
     }
 
-    fn stop_playback(&mut self) {
-        {
-            let mut state = self.state.lock().unwrap();
-            *state = PlayerState::SongSelected;
+    fn toggle_playback(&mut self) {
+        let state_mutex = self.state.clone();
+        let mut state = state_mutex.lock().unwrap();
+        match *state {
+            PlayerState::New => debug!("Nothing in player yet, skipping."),
+            PlayerState::SongSelected => {
+                debug!("Now playing {:?}", self.song.as_ref().unwrap().display());
+                self.play();
+                *state = PlayerState::Playing;
+            }
+            PlayerState::Playing => {
+                *state = PlayerState::Paused;
+                self.paused.store(true, Ordering::Relaxed);
+                debug!("Paused playback");
+            }
+            PlayerState::Paused => {
+                *state = PlayerState::Playing;
+                self.paused.store(false, Ordering::Relaxed);
+                debug!("Resumed playback");
+            }
         }
+    }
+
+    fn stop_playback(&mut self) {
         self.stop.store(true, Ordering::Relaxed);
     }
 
@@ -176,27 +195,8 @@ impl Mp3Player {
         Duration::from_millis((frame_duration * 1024.0) as u64)
     }
 
-    fn toggle_playback(&mut self) {
-        let state_mutex = self.state.clone();
-        let mut state = state_mutex.lock().unwrap();
-        match *state {
-            PlayerState::New => trace!("Nothing in player yet, skipping."),
-            PlayerState::SongSelected => {
-                debug!("Now playing {:?}", self.song.as_ref().unwrap().display());
-                self.play();
-                *state = PlayerState::Playing;
-            }
-            PlayerState::Playing => {
-                *state = PlayerState::Paused;
-                self.paused.store(true, Ordering::Relaxed);
-                trace!("Paused playback");
-            }
-            PlayerState::Paused => {
-                *state = PlayerState::Playing;
-                self.paused.store(false, Ordering::Relaxed);
-                trace!("Resumed playback");
-            }
-        }
+    fn get_song_elapsed_seconds(&self) -> f64 {
+        *self.current_playback_ms_elapsed.lock().unwrap() / 1000.0
     }
 
     fn read_mp3_frames(file_path: &str) -> Vec<Frame> {
@@ -216,9 +216,5 @@ impl Mp3Player {
         }
 
         frames
-    }
-
-    fn get_song_elapsed_seconds(&self) -> f64 {
-        *self.current_playback_ms_elapsed.lock().unwrap() / 1000.0
     }
 }

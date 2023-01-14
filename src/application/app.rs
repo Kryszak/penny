@@ -1,5 +1,14 @@
-use super::{actions::Action, AppState};
+use log::LevelFilter;
+
+use super::actions::Action;
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
+
+pub struct AppState {
+    pub help_visible: bool,
+    pub logs_visible: bool,
+    pub file_viewer_focused: bool,
+    pub log_level: LevelFilter,
+}
 
 pub enum AppActionResult {
     Continue,
