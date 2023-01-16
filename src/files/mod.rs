@@ -6,3 +6,5 @@ pub use file_viewer::FileViewerList;
 
 #[cfg(test)]
 mod file_entry_test;
+#[cfg(test)]
+mod file_viewer_test;
