@@ -6,15 +6,25 @@ use crate::application::actions::Action;
 
 use super::FileEntry;
 
+/// File viewer for traversing filesystem and selecting mp3 files
+/// for playback
 pub struct FileViewerList {
+    /// State of file viewer, also used for correct rendering
     pub state: ListState,
+    /// Current directory contents listed
+    /// Only contains directories and mp3 files
     pub items: Vec<FileEntry>,
     pub current_directory: String,
+    /// Contains index of item selected before file viewer
+    /// lost it's focus
     previously_selected_index: Option<usize>,
+    /// Contains index of selected item in parent directory.
+    /// Used to focus item when going to parent dir
     parent_selected_index: Option<usize>,
 }
 
 impl FileViewerList {
+    /// Creates new File Viewer for given directory
     pub fn with_directory(dir_name: &str) -> Option<Self> {
         FileViewerList::list_directory_content(dir_name)
             .map(|entries| FileViewerList {
@@ -37,6 +47,7 @@ impl FileViewerList {
         }
     }
 
+    /// Focuses file viewer allowing moving through filesystem and file picking
     pub fn focus(&mut self) {
         match self.state.selected() {
             Some(_) => {
@@ -54,6 +65,7 @@ impl FileViewerList {
         };
     }
 
+    /// Returns selected file if any is selected
     pub fn get_selected_file_entry(&self) -> Option<&FileEntry> {
         self.state.selected().map(|i| &self.items[i])
     }

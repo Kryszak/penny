@@ -1,6 +1,8 @@
 use clap::Parser;
 use std::env::var;
 
+/// Configuration parameters available to set as command line arguments
+/// If not provided, defaults from struct are used
 #[derive(Parser, Debug)]
 #[command(about = "TUI Mp3 player")]
 pub struct Config {

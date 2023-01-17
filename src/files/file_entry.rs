@@ -1,9 +1,13 @@
 use std::path::Path;
 
+/// Structure representing file in file viewer.
 #[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
 pub struct FileEntry {
+    /// Full path of given file
     pub path: String,
+    /// File name for display
     pub name: String,
+    /// Indicator for file/directory recognition
     pub is_file: bool,
 }
 
