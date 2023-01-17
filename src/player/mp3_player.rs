@@ -17,20 +17,32 @@ use std::{
 
 use super::duration_formatter::{DurationFormat, DurationFormatter};
 
+/// States that player can be in
 #[derive(PartialEq)]
 enum PlayerState {
+    /// Created
     New,
+    /// Loaded mp3 file, not playing, ready to start playback
     SongSelected,
+    /// Playing selected file
     Playing,
+    /// Playback paused
     Paused,
 }
 
+/// Structure responsible for playing mp3 files.
+/// Also allows to retrieve information about playback progress
+/// and selected song information.
 pub struct Mp3Player {
+    /// Miliseconds elapsed since start of playback
     current_playback_ms_elapsed: Arc<Mutex<f64>>,
     song: Option<SelectedSongFile>,
     state: Arc<Mutex<PlayerState>>,
+    /// Flag indicating that player should pause playback
     paused: Arc<AtomicBool>,
+    /// Flag indicating that player should stop playback
     stop: Arc<AtomicBool>,
+    /// all mp3 frames read from selected file
     frames: Vec<Frame>,
 }
 
@@ -46,7 +58,9 @@ impl Mp3Player {
         }
     }
 
+    /// Sets provided file as current song in player and starts playback.
     pub fn set_song_file(&mut self, file_entry: &FileEntry) {
+        //! In case player is currently playing other file, stops it
         {
             match *self.state.lock().unwrap() {
                 PlayerState::Playing | PlayerState::Paused => {
@@ -73,6 +87,7 @@ impl Mp3Player {
         }
     }
 
+    /// Returns labels for current state of player
     pub fn get_playback_status_string(&self) -> String {
         match *self.state.lock().unwrap() {
             PlayerState::New => String::from(" \u{231B} "),
@@ -82,6 +97,8 @@ impl Mp3Player {
         }
     }
 
+    /// Returns vector of information retrieved from [SelectedSongFile](SelectedSongFile::display)
+    /// or default information in case nothing is selected
     pub fn display_information(&mut self) -> Vec<String> {
         match &self.song {
             Some(song_info) => song_info.display(),
@@ -89,6 +106,7 @@ impl Mp3Player {
         }
     }
 
+    /// Returns normalized fraction of finished playback [0..1]
     pub fn get_current_song_percentage_progress(&self) -> f64 {
         match &self.song {
             Some(s) => {
@@ -100,6 +118,7 @@ impl Mp3Player {
         }
     }
 
+    /// Returns text label for playback progress
     pub fn get_text_progress(&self) -> Option<String> {
         self.song.as_ref().map(|s| {
             format!(

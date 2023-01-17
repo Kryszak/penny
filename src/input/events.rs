@@ -9,6 +9,7 @@ use std::{
     time::Duration,
 };
 
+// Combination of keys pressed in app
 pub struct KeyPress {
     pub key: KeyCode,
     pub modifiers: KeyModifiers,
@@ -23,17 +24,24 @@ impl KeyPress {
     }
 }
 
+/// Type of event in app
 pub enum InputEvent {
+    /// Key pressed by user
     Input(KeyPress),
+    /// Defined span of time elapsed in app
     Tick,
 }
 
+/// Event handling in application
+/// Captures key presses and allows to poll for them
+/// In case of no key press, sends [Tick](InputEvent::Tick) event
 pub struct Events {
     rx: Receiver<InputEvent>,
     stop_capture: Arc<AtomicBool>,
 }
 
 impl Events {
+    /// Creates event instance starting key press capture loop in separate thread
     pub fn new(tick_rate: Duration) -> Events {
         let (tx, rx) = mpsc::channel();
         let stop_capture = Arc::new(AtomicBool::new(false));
@@ -58,10 +66,12 @@ impl Events {
         Events { rx, stop_capture }
     }
 
+    /// Fetches next key press event or returns [Tick](InputEvent::Tick)
     pub fn next(&mut self) -> InputEvent {
         self.rx.recv().unwrap_or(InputEvent::Tick)
     }
 
+    /// Stops keypress capture thread
     pub fn close(&mut self) {
         self.stop_capture.store(true, Ordering::Relaxed)
     }

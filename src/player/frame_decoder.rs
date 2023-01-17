@@ -2,6 +2,14 @@ use minimp3::Frame;
 use rodio::Source;
 use std::time::Duration;
 
+/// Implementation of Rodio's [Source](rodio::Source) trait 
+/// for feeding [Sink](rodio::Sink) one frame at a time.
+/// This allows to perform other operations on audio frame
+/// before playing it like FFT analysis.
+///
+/// This implementation is based on Rodio's [Mp3Decoder](https://github.com/RustAudio/rodio/blob/master/src/decoder/mp3.rs)
+/// with change allowing to construct decoder for single frame instead of providing file to
+/// [Decoder](rodio::Decoder)
 pub struct FrameDecoder {
     frame: Frame,
     current_frame_offset: usize,

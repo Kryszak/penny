@@ -25,7 +25,6 @@ apt install libasound2
 
 ## TODO
 - FFT audio spectrum analysis & display
-- Crate documentation
 
 ## Possible new features
 - Theme support

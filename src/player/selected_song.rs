@@ -2,6 +2,7 @@ use super::{metadata::Mp3Metadata, MetadataReader};
 use crate::files::FileEntry;
 use std::time::Duration;
 
+/// Information about currently selected song in mp3 player
 pub struct SelectedSongFile {
     pub metadata: Mp3Metadata,
     pub duration: Duration,
@@ -15,6 +16,8 @@ impl SelectedSongFile {
         }
     }
 
+    /// Returns vector of information to be displayed about selected song
+    /// Informations are strings in format `<label> : <value>`
     pub fn display(&self) -> Vec<String> {
         let mut formatted = vec![];
         if let Some(a) = &self.metadata.artist {
