@@ -11,6 +11,7 @@ use tui::{
 };
 use tui_logger::TuiLoggerWidget;
 
+/// Render UI based on application state
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     let main_view_constraint = Constraint::Max(80);
     let now_playing_view_constraint = Constraint::Percentage(20);

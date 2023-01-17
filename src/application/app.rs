@@ -10,11 +10,15 @@ pub struct AppState {
     pub log_level: LevelFilter,
 }
 
+/// Indicator used by app runner to continue running or terminate process 
+/// after completing an action
 pub enum AppActionResult {
     Continue,
     Exit,
 }
 
+/// Structure keeping state of the application.
+/// It's also responsible for dispatch of actions to it's components.
 pub struct App {
     pub state: AppState,
     pub file_list: FileViewerList,
@@ -39,6 +43,7 @@ impl App {
         })
     }
 
+    /// Dispatch action and return information to continue or terminate app
     pub fn do_action(&mut self, action: Action) -> AppActionResult {
         match action {
             Action::Quit => return AppActionResult::Exit,

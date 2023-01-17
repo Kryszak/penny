@@ -1,3 +1,4 @@
+//! Module containing implementation of user interface
 pub mod actions;
 pub mod app;
 pub mod ui;

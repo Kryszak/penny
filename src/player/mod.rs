@@ -1,3 +1,5 @@
+//! Module handling playback of mp3 files and extracting mp3 
+//! information for display
 mod duration_formatter;
 mod frame_decoder;
 pub mod metadata;

@@ -18,6 +18,7 @@ use log::{info, LevelFilter};
 use std::{io, time::Duration};
 use tui::{backend::CrosstermBackend, Terminal};
 
+/// Application runner handling terminal setup as well as app lifetime 
 pub fn run_app(app: &mut App) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;

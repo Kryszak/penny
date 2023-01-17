@@ -1,6 +1,7 @@
 use crate::input::events::KeyPress;
 use crossterm::event::KeyCode;
 
+/// Actions available in app
 #[derive(Debug)]
 pub enum Action {
     Quit,
@@ -16,9 +17,11 @@ pub enum Action {
     StopPlayback,
 }
 
+/// Translator for keypresses to actions inside of app
 pub struct Actions;
 
 impl Actions {
+    /// Returns action for given key press, or `None` if keypress is not handled
     pub fn from(key_press: KeyPress) -> Option<Action> {
         match key_press.key {
             KeyCode::Char('q') => Some(Action::Quit),
