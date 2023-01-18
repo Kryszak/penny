@@ -31,3 +31,4 @@ apt install libasound2
 - Playlist functionality
 - Fetching more song metadata from external API
 - D-Bus integration (MPRIS)
+- Native notification when playback starts
