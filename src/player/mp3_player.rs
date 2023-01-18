@@ -134,6 +134,9 @@ impl Mp3Player {
         let paused = self.paused.clone();
         let should_stop = self.stop.clone();
         let player_state = self.state.clone();
+        // TODO adjust duration to avoid stuttering - sleep shorter than whole frame,
+        // needs to be timed well for instant stop/pause functionality
+        // also needs taking in consideration time needed for FFT
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
