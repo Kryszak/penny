@@ -1,5 +1,8 @@
 use crate::{
-    application::actions::Action, files::FileEntry, player::FrameDecoder, player::SelectedSongFile,
+    application::actions::Action,
+    files::FileEntry,
+    player::SelectedSongFile,
+    player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
 };
 use log::{debug, error};
 use minimp3::{Decoder, Error, Frame};
@@ -44,6 +47,8 @@ pub struct Mp3Player {
     stop: Arc<AtomicBool>,
     /// all mp3 frames read from selected file
     frames: Vec<Frame>,
+    /// current frame spectrum analyzed data
+    spectrum: Arc<Mutex<Vec<f32>>>,
 }
 
 impl Mp3Player {
@@ -55,6 +60,7 @@ impl Mp3Player {
             stop: Arc::new(AtomicBool::new(false)),
             frames: vec![],
             current_playback_ms_elapsed: Arc::new(Mutex::new(0.0)),
+            spectrum: Arc::new(Mutex::new(vec![])),
         }
     }
 
@@ -130,6 +136,8 @@ impl Mp3Player {
         })
     }
 
+    // TODO fn to access spectrum data for bar chart drawing
+
     fn play(&mut self) {
         let paused = self.paused.clone();
         let should_stop = self.stop.clone();
@@ -140,9 +148,11 @@ impl Mp3Player {
         let frame_duration = self.get_frame_duration();
         let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
+        let spectrum_data = self.spectrum.clone();
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
+            let mut spectrum_analyzer = SpectrumAnalyzer::new();
             loop {
                 if should_stop.load(Ordering::Relaxed) {
                     break;
@@ -155,6 +165,9 @@ impl Mp3Player {
                 }
                 match frames_iterator.next() {
                     Some(frame) => {
+                        {
+                            *spectrum_data.lock().unwrap() = spectrum_analyzer.analyze(&frame.data);
+                        }
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }

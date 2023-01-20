@@ -12,6 +12,7 @@ id3 = "1.5.1"
 rodio = "0.16.0"
 minimp3 = "0.5.1"
 clap = { version = "4.0.32", features = ["derive"] }
+rustfft = "6.1.0"
 
 [dev-dependencies]
 tempdir = "0.3.7"
