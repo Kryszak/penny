@@ -7,7 +7,7 @@ use crate::{
     input::{Events, InputEvent},
 };
 use crossterm::{
-    event::{DisableMouseCapture, EnableMouseCapture},
+    event::DisableMouseCapture,
     execute,
     terminal::{
         disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen, SetTitle,
@@ -32,7 +32,7 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
     execute!(
         terminal.backend_mut(),
         EnterAlternateScreen,
-        EnableMouseCapture
+        DisableMouseCapture
     )?;
 
     terminal.clear()?;
