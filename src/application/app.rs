@@ -8,7 +8,8 @@ pub struct AppState {
     pub logs_visible: bool,
     pub file_viewer_focused: bool,
     pub log_level: LevelFilter,
-    pub audio_spectrum: Vec<u64>,
+    pub audio_spectrum: Vec<(&'static str, u64)>,
+    pub audio_spectrum_band_count: usize,
 }
 
 /// Indicator used by app runner to continue running or terminate process
@@ -39,6 +40,7 @@ impl App {
                 file_viewer_focused: false,
                 log_level,
                 audio_spectrum: vec![],
+                audio_spectrum_band_count: 32,
             },
             file_list,
             player: Mp3Player::new(),
@@ -77,11 +79,21 @@ impl App {
     }
 
     pub fn update_spectrum(&mut self) {
-        self.state.audio_spectrum = self
+        let unsigned_spectrum: Vec<u64> = self
             .player
             .get_audio_spectrum()
             .into_iter()
             .map(|v| v as u64)
             .collect();
+        let usable_spectrum = &unsigned_spectrum[0..unsigned_spectrum.len() / 2];
+        let band_count = self.state.audio_spectrum_band_count;
+        if usable_spectrum.len() > band_count {
+            let band_width = usable_spectrum.len() / band_count;
+            self.state.audio_spectrum = usable_spectrum
+                .chunks(band_width)
+                .skip(2)
+                .map(|chunk| ("", chunk.iter().copied().reduce(|a, b| a + b).unwrap_or(0)))
+                .collect();
+        }
     }
 }

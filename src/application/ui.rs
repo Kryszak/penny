@@ -6,7 +6,7 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Sparkline},
+    widgets::{BarChart, Block, Borders, Gauge, List, ListItem, Paragraph},
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
@@ -100,7 +100,7 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
         .margin(1)
         .split(area);
 
-    let (song_info_area, progress_bar_area) = (view[0], view[2]);
+    let (song_info_area, audio_spectrum_area, progress_bar_area) = (view[0], view[1], view[2]);
 
     let block_title = app.player.get_playback_status_string();
 
@@ -116,7 +116,10 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     f.render_widget(draw_song_info(&mut app.player), song_info_area);
 
     // audio spectrum
-    f.render_widget(draw_audio_spectrum(app), view[1]);
+    f.render_widget(
+        draw_audio_spectrum(app, audio_spectrum_area),
+        audio_spectrum_area,
+    );
 
     // Song progress bar
     f.render_widget(draw_song_progress(&app.player), progress_bar_area);
@@ -149,9 +152,13 @@ fn draw_song_progress(player: &Mp3Player) -> Gauge {
         ))
 }
 
-fn draw_audio_spectrum(app: &mut App) -> Sparkline {
+fn draw_audio_spectrum(app: &mut App, rect: Rect) -> BarChart {
     app.update_spectrum();
-    Sparkline::default().data(&app.state.audio_spectrum)
+    BarChart::default()
+        .data(&app.state.audio_spectrum)
+        .bar_width(rect.width / app.state.audio_spectrum_band_count as u16)
+        .style(Style::default().fg(Color::Cyan))
+        .value_style(Style::default().fg(Color::Cyan))
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
