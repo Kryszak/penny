@@ -72,7 +72,9 @@ impl App {
                     }
                 }
             }
-            Action::TogglePlayback | Action::StopPlayback => self.player.handle_action(action),
+            Action::TogglePlayback | Action::StopPlayback => {
+                self.player.handle_action(action);
+            }
         };
 
         AppActionResult::Continue
@@ -94,6 +96,8 @@ impl App {
                 .skip(2)
                 .map(|chunk| ("", chunk.iter().copied().reduce(|a, b| a + b).unwrap_or(0)))
                 .collect();
+        } else {
+            self.state.audio_spectrum = vec![];
         }
     }
 }

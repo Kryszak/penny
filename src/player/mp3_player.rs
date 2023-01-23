@@ -157,6 +157,9 @@ impl Mp3Player {
                 if should_stop.load(Ordering::Relaxed) {
                     break;
                 }
+                if paused.load(Ordering::Relaxed) {
+                    *spectrum_data.lock().unwrap() = vec![];
+                }
                 while paused.load(Ordering::Relaxed) {
                     if should_stop.load(Ordering::Relaxed) {
                         paused.store(false, Ordering::Relaxed);
@@ -181,6 +184,7 @@ impl Mp3Player {
             should_stop.store(false, Ordering::Relaxed);
             paused.store(false, Ordering::Relaxed);
             *playback_progress.lock().unwrap() = 0.0;
+            *spectrum_data.lock().unwrap() = vec![];
             debug!("Playback finished.");
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
