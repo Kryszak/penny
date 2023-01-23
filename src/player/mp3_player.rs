@@ -137,15 +137,15 @@ impl Mp3Player {
     }
 
     // TODO fn to access spectrum data for bar chart drawing
+    pub fn get_audio_spectrum(&self) -> Vec<f32> {
+        (*self.spectrum.clone().lock().unwrap()).clone()
+    }
 
     fn play(&mut self) {
         let paused = self.paused.clone();
         let should_stop = self.stop.clone();
         let player_state = self.state.clone();
-        // TODO adjust duration to avoid stuttering - sleep shorter than whole frame,
-        // needs to be timed well for instant stop/pause functionality
-        // also needs taking in consideration time needed for FFT
-        let frame_duration = self.get_frame_duration();
+        let frame_duration = self.get_frame_duration() - Duration::from_millis(1);
         let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
         let spectrum_data = self.spectrum.clone();

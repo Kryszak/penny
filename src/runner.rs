@@ -39,7 +39,7 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
     terminal.hide_cursor()?;
     info!("Welcome to penny!");
 
-    let tick_rate = Duration::from_millis(200);
+    let tick_rate = Duration::from_millis(30);
     let mut events = Events::new(tick_rate);
 
     loop {

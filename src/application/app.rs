@@ -8,9 +8,10 @@ pub struct AppState {
     pub logs_visible: bool,
     pub file_viewer_focused: bool,
     pub log_level: LevelFilter,
+    pub audio_spectrum: Vec<u64>,
 }
 
-/// Indicator used by app runner to continue running or terminate process 
+/// Indicator used by app runner to continue running or terminate process
 /// after completing an action
 pub enum AppActionResult {
     Continue,
@@ -37,6 +38,7 @@ impl App {
                 logs_visible: config.debug,
                 file_viewer_focused: false,
                 log_level,
+                audio_spectrum: vec![],
             },
             file_list,
             player: Mp3Player::new(),
@@ -72,5 +74,14 @@ impl App {
         };
 
         AppActionResult::Continue
+    }
+
+    pub fn update_spectrum(&mut self) {
+        self.state.audio_spectrum = self
+            .player
+            .get_audio_spectrum()
+            .into_iter()
+            .map(|v| v as u64)
+            .collect();
     }
 }

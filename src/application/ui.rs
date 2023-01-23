@@ -6,15 +6,15 @@ use tui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::{Span, Spans},
-    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph},
+    widgets::{Block, Borders, Gauge, List, ListItem, Paragraph, Sparkline},
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
 
 /// Render UI based on application state
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
-    let main_view_constraint = Constraint::Max(80);
-    let now_playing_view_constraint = Constraint::Percentage(20);
+    let main_view_constraint = Constraint::Max(60);
+    let now_playing_view_constraint = Constraint::Percentage(40);
 
     let chunks = Layout::default()
         .direction(Direction::Vertical)
@@ -27,7 +27,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     render_main_view(f, main_view_area, app);
 
     // Player
-    draw_player_panel(f, &mut app.player, player_area);
+    draw_player_panel(f, app, player_area);
 }
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
@@ -86,7 +86,7 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
         .highlight_symbol("> ")
 }
 
-fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area: Rect) {
+fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     let view = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -102,7 +102,7 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
 
     let (song_info_area, progress_bar_area) = (view[0], view[2]);
 
-    let block_title = player.get_playback_status_string();
+    let block_title = app.player.get_playback_status_string();
 
     f.render_widget(
         Block::default()
@@ -113,9 +113,13 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, player: &mut Mp3Player, area:
     );
 
     // Song info
-    f.render_widget(draw_song_info(player), song_info_area);
+    f.render_widget(draw_song_info(&mut app.player), song_info_area);
+
+    // audio spectrum
+    f.render_widget(draw_audio_spectrum(app), view[1]);
+
     // Song progress bar
-    f.render_widget(draw_song_progress(player), progress_bar_area);
+    f.render_widget(draw_song_progress(&mut app.player), progress_bar_area);
 }
 
 fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
@@ -143,6 +147,11 @@ fn draw_song_progress(player: &Mp3Player) -> Gauge {
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
         ))
+}
+
+fn draw_audio_spectrum(app: &mut App) -> Sparkline {
+    app.update_spectrum();
+    Sparkline::default().data(&app.state.audio_spectrum)
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
