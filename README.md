@@ -23,9 +23,6 @@ pacman -S alsa-lib
 apt install libasound2
 ```
 
-## TODO
-- FFT audio spectrum analysis & display
-
 ## Possible new features
 - Theme support
 - Playlist functionality

@@ -119,7 +119,7 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     f.render_widget(draw_audio_spectrum(app), view[1]);
 
     // Song progress bar
-    f.render_widget(draw_song_progress(&mut app.player), progress_bar_area);
+    f.render_widget(draw_song_progress(&app.player), progress_bar_area);
 }
 
 fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
