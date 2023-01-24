@@ -1,5 +1,5 @@
 ![Build Status](https://github.com/Kryszak/penny/actions/workflows/test.yml/badge.svg)
-[![Codacy Badge](https://app.codacy.com/project/badge/Grade/85677070b39846998506af24a0964950)](https://www.codacy.com/gh/Kryszak/penny/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Kryszak/penny&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/fa1d771f77af418994d19e920e77e858)](https://www.codacy.com/gh/Kryszak/penny/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=Kryszak/penny&amp;utm_campaign=Badge_Grade)
 
 # Penny
 Linux Tui MP3 player
