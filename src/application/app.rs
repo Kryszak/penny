@@ -80,6 +80,10 @@ impl App {
         AppActionResult::Continue
     }
 
+    /// Process raw spectrum from player for display
+    /// Takes first half of frequencies, to display only audible range of frequencies (<20kHz)
+    /// For display purposes, we divide that range into bands and sum values
+    /// First two bins are skipped, as they always have high values
     pub fn update_spectrum(&mut self) {
         let unsigned_spectrum: Vec<u64> = self
             .player
