@@ -136,7 +136,6 @@ impl Mp3Player {
         })
     }
 
-    // TODO fn to access spectrum data for bar chart drawing
     pub fn get_audio_spectrum(&self) -> Vec<f32> {
         (*self.spectrum.clone().lock().unwrap()).clone()
     }
