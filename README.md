@@ -25,10 +25,3 @@ pacman -S alsa-lib
 apt install libasound2
 ```
 
-## Possible new features
-- Theme support
-- Playlist functionality
-- Fetching more song metadata from external API
-- D-Bus integration (MPRIS)
-- Native notification when playback starts
-- Different styles of audio spectrum visualization
