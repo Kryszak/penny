@@ -7,14 +7,22 @@ jobs:
     name: Run penny tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: awalsh128/cache-apt-pkgs-action@latest
+      - name: Checkout project
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        uses: awalsh128/cache-apt-pkgs-action@latest
         with:
           packages: libasound2-dev
           version: 1.0
-      - uses: actions-rs/toolchain@v1
+      - name: Prepare rust toolchain
+        uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - name: Run tests
       - uses: actions-rs/cargo@v1
         with:
           command: test
+      - name: Build app
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
