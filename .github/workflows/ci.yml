@@ -31,3 +31,7 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
+      - name: Check with Clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy -- -D warnings
