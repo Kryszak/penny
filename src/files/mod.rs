@@ -1,4 +1,4 @@
-//! Module containing implementation of file selecting 
+//! Module containing implementation of file selecting
 //! and traversing file system for mp3 file selection
 pub mod file_entry;
 pub mod file_viewer;
