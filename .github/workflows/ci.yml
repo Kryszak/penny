@@ -23,6 +23,7 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          components: clippy
       - name: Run tests
         uses: actions-rs/cargo@v1
         with:
@@ -34,4 +35,4 @@ jobs:
       - name: Check with Clippy
         uses: actions-rs/cargo@v1
         with:
-          command: clippy -- -D warnings
+          command: clippy --all-features -- -D warnings
