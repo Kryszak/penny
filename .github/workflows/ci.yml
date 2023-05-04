@@ -9,7 +9,7 @@ on:
 
 jobs:
   test:
-    name: Run penny tests
+    name: Run penny build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project

@@ -6,6 +6,7 @@ use std::io;
 
 mod application;
 mod cli;
+mod external;
 mod files;
 mod input;
 mod player;

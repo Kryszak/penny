@@ -10,7 +10,7 @@ mod spectrum_analyzer;
 use frame_decoder::FrameDecoder;
 pub use metadata::MetadataReader;
 pub use mp3_player::Mp3Player;
-use selected_song::SelectedSongFile;
+pub use selected_song::SelectedSongFile;
 
 #[cfg(test)]
 mod duration_formatter_test;

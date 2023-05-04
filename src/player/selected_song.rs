@@ -31,4 +31,23 @@ impl SelectedSongFile {
 
         formatted
     }
+
+    pub fn display_short(&self) -> String {
+        let mut formatted = String::new();
+        if let Some(a) = &self.metadata.artist {
+            formatted.push_str(a);
+        }
+        let title = match &self.metadata.title {
+            Some(t) => t,
+            None => &self.metadata.file_path,
+        };
+        if formatted.is_empty() {
+            formatted.push_str(title);
+        } else {
+            formatted.push_str(" - ");
+            formatted.push_str(title);
+        }
+
+        formatted
+    }
 }

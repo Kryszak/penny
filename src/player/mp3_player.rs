@@ -1,5 +1,6 @@
 use crate::{
     application::actions::Action,
+    external::notifier::{notify_playback_start, notify_playback_stopped},
     files::FileEntry,
     player::SelectedSongFile,
     player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
@@ -148,6 +149,7 @@ impl Mp3Player {
         let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
         let spectrum_data = self.spectrum.clone();
+        notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
@@ -185,6 +187,7 @@ impl Mp3Player {
             *playback_progress.lock().unwrap() = 0.0;
             *spectrum_data.lock().unwrap() = vec![];
             debug!("Playback finished.");
+            notify_playback_stopped();
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
         });
