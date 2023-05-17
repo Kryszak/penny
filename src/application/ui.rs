@@ -1,4 +1,4 @@
-use super::App;
+use super::{app::VisualizationStyle, App};
 use crate::{files::FileEntry, player::Mp3Player};
 use std::vec;
 use tui::{
@@ -153,12 +153,22 @@ fn draw_song_progress(player: &Mp3Player) -> Gauge {
 }
 
 fn draw_audio_spectrum(app: &mut App, rect: Rect) -> BarChart {
-    app.update_spectrum();
-    BarChart::default()
-        .data(&app.state.audio_spectrum)
-        .bar_width(rect.width / app.state.audio_spectrum_band_count as u16)
-        .style(Style::default().fg(Color::Cyan))
-        .value_style(Style::default().fg(Color::Cyan))
+    match app.state.visualization_style {
+        VisualizationStyle::Bar { ref mut data } => {
+            let unsigned_spectrum: Vec<u64> = app
+                .player
+                .get_audio_spectrum()
+                .into_iter()
+                .map(|v| v as u64)
+                .collect();
+            data.update_spectrum(unsigned_spectrum);
+            BarChart::default()
+                .data(&data.audio_spectrum)
+                .bar_width(rect.width / data.audio_spectrum_band_count as u16)
+                .style(Style::default().fg(Color::Cyan))
+                .value_style(Style::default().fg(Color::Cyan))
+        }
+    }
 }
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
