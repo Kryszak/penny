@@ -4,14 +4,13 @@ use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
 
-const VISUALIZATION_BAR_COUNT: usize = 64;
-
 pub struct AppState {
     pub help_visible: bool,
     pub logs_visible: bool,
     pub file_viewer_focused: bool,
     pub log_level: LevelFilter,
     pub visualization_style: VisualizationStyle,
+    pub band_count: usize,
 }
 
 pub enum VisualizationStyle {
@@ -47,8 +46,9 @@ impl App {
                 file_viewer_focused: false,
                 log_level,
                 visualization_style: VisualizationStyle::Bar {
-                    data: BarChartData::new(VISUALIZATION_BAR_COUNT),
+                    data: BarChartData::new(config.band_count),
                 },
+                band_count: config.band_count,
             },
             file_list,
             player: Mp3Player::new(),
@@ -93,12 +93,12 @@ impl App {
         match &self.state.visualization_style {
             VisualizationStyle::Bar { data: _ } => {
                 self.state.visualization_style = VisualizationStyle::Chart {
-                    data: ChartData::new(VISUALIZATION_BAR_COUNT),
+                    data: ChartData::new(self.state.band_count),
                 }
             }
             VisualizationStyle::Chart { data: _ } => {
                 self.state.visualization_style = VisualizationStyle::Bar {
-                    data: BarChartData::new(VISUALIZATION_BAR_COUNT),
+                    data: BarChartData::new(self.state.band_count),
                 }
             }
         }

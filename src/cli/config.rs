@@ -16,4 +16,7 @@ pub struct Config {
     /// Open logs view and set log level to DEBUG
     #[arg(long, help = "Toggle logs with debug level")]
     pub debug: bool,
+
+    #[arg(long, default_value_t = 64)]
+    pub band_count: usize,
 }
