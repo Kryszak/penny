@@ -2,6 +2,7 @@
 pub mod actions;
 pub mod app;
 pub mod ui;
+pub mod visualization_state;
 
 pub use app::App;
 pub use app::AppActionResult;

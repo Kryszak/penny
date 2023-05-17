@@ -1,6 +1,7 @@
 use log::LevelFilter;
 
-use super::actions::Action;
+use super::visualization_state::BarChartData;
+use super::{actions::Action, visualization_state::ChartData};
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
 
 pub struct AppState {
@@ -8,8 +9,13 @@ pub struct AppState {
     pub logs_visible: bool,
     pub file_viewer_focused: bool,
     pub log_level: LevelFilter,
-    pub audio_spectrum: Vec<(&'static str, u64)>,
-    pub audio_spectrum_band_count: usize,
+    pub visualization_style: VisualizationStyle,
+    pub band_count: usize,
+}
+
+pub enum VisualizationStyle {
+    Bar { data: BarChartData },
+    Chart { data: ChartData },
 }
 
 /// Indicator used by app runner to continue running or terminate process
@@ -39,8 +45,10 @@ impl App {
                 logs_visible: config.debug,
                 file_viewer_focused: false,
                 log_level,
-                audio_spectrum: vec![],
-                audio_spectrum_band_count: 32,
+                visualization_style: VisualizationStyle::Bar {
+                    data: BarChartData::new(config.band_count),
+                },
+                band_count: config.band_count,
             },
             file_list,
             player: Mp3Player::new(),
@@ -75,33 +83,24 @@ impl App {
             Action::TogglePlayback | Action::StopPlayback => {
                 self.player.handle_action(action);
             }
+            Action::ChangeVisualization => self.change_visualization_style(),
         };
 
         AppActionResult::Continue
     }
 
-    /// Process raw spectrum from player for display
-    /// Takes first half of frequencies, to display only audible range of frequencies (<20kHz)
-    /// For display purposes, we divide that range into bands and sum values
-    /// First two bins are skipped, as they always have high values
-    pub fn update_spectrum(&mut self) {
-        let unsigned_spectrum: Vec<u64> = self
-            .player
-            .get_audio_spectrum()
-            .into_iter()
-            .map(|v| v as u64)
-            .collect();
-        let usable_spectrum = &unsigned_spectrum[0..unsigned_spectrum.len() / 2];
-        let band_count = self.state.audio_spectrum_band_count;
-        if usable_spectrum.len() > band_count {
-            let band_width = usable_spectrum.len() / band_count;
-            self.state.audio_spectrum = usable_spectrum
-                .chunks(band_width)
-                .skip(2)
-                .map(|chunk| ("", chunk.iter().copied().reduce(|a, b| a + b).unwrap_or(0)))
-                .collect();
-        } else {
-            self.state.audio_spectrum = vec![];
+    fn change_visualization_style(&mut self) {
+        match &self.state.visualization_style {
+            VisualizationStyle::Bar { data: _ } => {
+                self.state.visualization_style = VisualizationStyle::Chart {
+                    data: ChartData::new(self.state.band_count),
+                }
+            }
+            VisualizationStyle::Chart { data: _ } => {
+                self.state.visualization_style = VisualizationStyle::Bar {
+                    data: BarChartData::new(self.state.band_count),
+                }
+            }
         }
     }
 }
