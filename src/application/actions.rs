@@ -15,6 +15,7 @@ pub enum Action {
     SelectSongFile,
     TogglePlayback,
     StopPlayback,
+    ChangeVisualization,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -35,6 +36,7 @@ impl Actions {
             KeyCode::Enter => Some(Action::SelectSongFile),
             KeyCode::Char('p') => Some(Action::TogglePlayback),
             KeyCode::Char('s') => Some(Action::StopPlayback),
+            KeyCode::Char('v') => Some(Action::ChangeVisualization),
             _ => None,
         }
     }

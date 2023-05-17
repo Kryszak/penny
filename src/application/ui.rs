@@ -5,8 +5,11 @@ use tui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
+    symbols,
     text::{Span, Spans},
-    widgets::{BarChart, Block, Borders, Gauge, List, ListItem, Paragraph},
+    widgets::{
+        Axis, BarChart, Block, Borders, Chart, Dataset, Gauge, GraphType, List, ListItem, Paragraph,
+    },
     Frame,
 };
 use tui_logger::TuiLoggerWidget;
@@ -116,10 +119,7 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     f.render_widget(draw_song_info(&mut app.player), song_info_area);
 
     // audio spectrum
-    f.render_widget(
-        draw_audio_spectrum(app, audio_spectrum_area),
-        audio_spectrum_area,
-    );
+    draw_audio_spectrum(f, app, audio_spectrum_area);
 
     // Song progress bar
     f.render_widget(draw_song_progress(&app.player), progress_bar_area);
@@ -152,7 +152,7 @@ fn draw_song_progress(player: &Mp3Player) -> Gauge {
         ))
 }
 
-fn draw_audio_spectrum(app: &mut App, rect: Rect) -> BarChart {
+fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) {
     match app.state.visualization_style {
         VisualizationStyle::Bar { ref mut data } => {
             let unsigned_spectrum: Vec<u64> = app
@@ -162,11 +162,35 @@ fn draw_audio_spectrum(app: &mut App, rect: Rect) -> BarChart {
                 .map(|v| v as u64)
                 .collect();
             data.update_spectrum(unsigned_spectrum);
-            BarChart::default()
-                .data(&data.audio_spectrum)
-                .bar_width(rect.width / data.audio_spectrum_band_count as u16)
+            f.render_widget(
+                BarChart::default()
+                    .data(&data.audio_spectrum)
+                    .bar_width(rect.width / data.audio_spectrum_band_count as u16)
+                    .style(Style::default().fg(Color::Cyan))
+                    .value_style(Style::default().fg(Color::Cyan)),
+                rect,
+            );
+        }
+        VisualizationStyle::Chart { ref mut data } => {
+            let unsigned_spectrum: Vec<f64> = app
+                .player
+                .get_audio_spectrum()
+                .into_iter()
+                .map(f64::from)
+                .collect();
+            data.update_spectrum(unsigned_spectrum);
+            let dataset = Dataset::default()
+                .marker(symbols::Marker::Dot)
                 .style(Style::default().fg(Color::Cyan))
-                .value_style(Style::default().fg(Color::Cyan))
+                .graph_type(GraphType::Line)
+                .data(&data.audio_spectrum);
+            f.render_widget(
+                Chart::new(vec![dataset])
+                    .block(Block::default())
+                    .x_axis(Axis::default().bounds([0.0, data.audio_spectrum_point_count as f64]))
+                    .y_axis(Axis::default().bounds([0.0, data.max_value])),
+                rect,
+            );
         }
     }
 }
@@ -176,6 +200,7 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
         Spans::from("h: Toogle help"),
         Spans::from("f: Focus file viewer"),
         Spans::from("\u{23CE}: Play selected file"),
+        Spans::from("v: Change visualization style"),
         Spans::from("q: Quit"),
     ];
 

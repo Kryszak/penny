@@ -1,8 +1,10 @@
 use log::LevelFilter;
 
-use super::actions::Action;
 use super::visualization_state::BarChartData;
+use super::{actions::Action, visualization_state::ChartData};
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
+
+const VISUALIZATION_BAR_COUNT: usize = 64;
 
 pub struct AppState {
     pub help_visible: bool,
@@ -14,6 +16,7 @@ pub struct AppState {
 
 pub enum VisualizationStyle {
     Bar { data: BarChartData },
+    Chart { data: ChartData },
 }
 
 /// Indicator used by app runner to continue running or terminate process
@@ -44,7 +47,7 @@ impl App {
                 file_viewer_focused: false,
                 log_level,
                 visualization_style: VisualizationStyle::Bar {
-                    data: BarChartData::new(32),
+                    data: BarChartData::new(VISUALIZATION_BAR_COUNT),
                 },
             },
             file_list,
@@ -80,8 +83,24 @@ impl App {
             Action::TogglePlayback | Action::StopPlayback => {
                 self.player.handle_action(action);
             }
+            Action::ChangeVisualization => self.change_visualization_style(),
         };
 
         AppActionResult::Continue
+    }
+
+    fn change_visualization_style(&mut self) {
+        match &self.state.visualization_style {
+            VisualizationStyle::Bar { data: _ } => {
+                self.state.visualization_style = VisualizationStyle::Chart {
+                    data: ChartData::new(VISUALIZATION_BAR_COUNT),
+                }
+            }
+            VisualizationStyle::Chart { data: _ } => {
+                self.state.visualization_style = VisualizationStyle::Bar {
+                    data: BarChartData::new(VISUALIZATION_BAR_COUNT),
+                }
+            }
+        }
     }
 }
