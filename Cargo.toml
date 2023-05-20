@@ -4,9 +4,11 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-tui = "0.19"
+ratatui = "0.20.1"
 crossterm = "0.26"
-tui-logger = "0.9.1"
+tui-logger = { version = "0.9.1", features = [
+    "ratatui-support",
+], default-features = false }
 log = "0.4.17"
 id3 = "1.7.0"
 rodio = "0.17.1"

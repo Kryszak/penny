@@ -1,6 +1,6 @@
 use log::{error, trace};
+use ratatui::widgets::ListState;
 use std::{fs, io, path::Path};
-use tui::widgets::ListState;
 
 use crate::application::actions::Action;
 
