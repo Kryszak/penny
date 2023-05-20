@@ -15,8 +15,8 @@ use crossterm::{
     ExecutableCommand,
 };
 use log::{info, LevelFilter};
+use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{io, time::Duration};
-use tui::{backend::CrosstermBackend, Terminal};
 
 /// Application runner handling terminal setup as well as managing app lifetime
 pub fn run_app(app: &mut App) -> io::Result<()> {

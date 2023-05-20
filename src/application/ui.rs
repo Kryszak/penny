@@ -1,7 +1,6 @@
 use super::{app::VisualizationStyle, App};
 use crate::{files::FileEntry, player::Mp3Player};
-use std::vec;
-use tui::{
+use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
@@ -12,6 +11,7 @@ use tui::{
     },
     Frame,
 };
+use std::vec;
 use tui_logger::TuiLoggerWidget;
 
 /// Render UI based on application state
@@ -35,7 +35,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     let help_constraint = match app.state.help_visible {
-        true => Constraint::Percentage(15),
+        true => Constraint::Max(25),
         false => Constraint::Length(0),
     };
 
