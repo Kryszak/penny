@@ -16,6 +16,7 @@ pub enum Action {
     TogglePlayback,
     StopPlayback,
     ChangeVisualization,
+    ChangeColor,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -37,6 +38,7 @@ impl Actions {
             KeyCode::Char('p') => Some(Action::TogglePlayback),
             KeyCode::Char('s') => Some(Action::StopPlayback),
             KeyCode::Char('v') => Some(Action::ChangeVisualization),
+            KeyCode::Char('c') => Some(Action::ChangeColor),
             _ => None,
         }
     }

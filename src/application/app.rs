@@ -1,4 +1,5 @@
 use log::LevelFilter;
+use ratatui::style::Color;
 
 use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
@@ -10,6 +11,7 @@ pub struct AppState {
     pub file_viewer_focused: bool,
     pub log_level: LevelFilter,
     pub visualization_style: VisualizationStyle,
+    pub color_style: Color,
     pub band_count: usize,
 }
 
@@ -48,6 +50,7 @@ impl App {
                 visualization_style: VisualizationStyle::Bar {
                     data: BarChartData::new(config.band_count),
                 },
+                color_style: config.color.to_ratatui_color(),
                 band_count: config.band_count,
             },
             file_list,
@@ -84,6 +87,7 @@ impl App {
                 self.player.handle_action(action);
             }
             Action::ChangeVisualization => self.change_visualization_style(),
+            Action::ChangeColor => self.change_color(),
         };
 
         AppActionResult::Continue
@@ -101,6 +105,30 @@ impl App {
                     data: BarChartData::new(self.state.band_count),
                 }
             }
+        }
+    }
+
+    fn change_color(&mut self) {
+        match &self.state.color_style {
+            Color::Cyan => self.state.color_style = Color::Red,
+            Color::Red => self.state.color_style = Color::Magenta,
+            Color::Magenta => self.state.color_style = Color::Green,
+            Color::Green => self.state.color_style = Color::Blue,
+            Color::Blue => self.state.color_style = Color::Cyan,
+            Color::Indexed(_)
+            | Color::Rgb(_, _, _)
+            | Color::White
+            | Color::LightRed
+            | Color::LightCyan
+            | Color::LightMagenta
+            | Color::LightBlue
+            | Color::LightYellow
+            | Color::LightGreen
+            | Color::DarkGray
+            | Color::Gray
+            | Color::Yellow
+            | Color::Black
+            | Color::Reset => (),
         }
     }
 }

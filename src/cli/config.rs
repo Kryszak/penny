@@ -1,5 +1,27 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use ratatui::style::Color;
 use std::env::var;
+
+#[derive(Clone, Debug, ValueEnum)]
+pub enum ParsedColor {
+    Cyan,
+    Red,
+    Magenta,
+    Green,
+    Blue,
+}
+
+impl ParsedColor {
+    pub fn to_ratatui_color(&self) -> Color {
+        match self {
+            ParsedColor::Cyan => Color::Cyan,
+            ParsedColor::Red => Color::Red,
+            ParsedColor::Magenta => Color::Magenta,
+            ParsedColor::Green => Color::Green,
+            ParsedColor::Blue => Color::Blue,
+        }
+    }
+}
 
 /// Configuration parameters available to set as command line arguments
 /// If not provided, defaults from struct are used
@@ -19,4 +41,7 @@ pub struct Config {
 
     #[arg(long, default_value_t = 64)]
     pub band_count: usize,
+
+    #[arg(value_enum, long, default_value_t = ParsedColor::Cyan) ]
+    pub color: ParsedColor,
 }
