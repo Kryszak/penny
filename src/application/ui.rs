@@ -53,7 +53,11 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
 
     // File explorer
     f.render_stateful_widget(
-        draw_file_list(&app.file_list.current_directory, &app.file_list.items),
+        draw_file_list(
+            &app.file_list.current_directory,
+            &app.file_list.items,
+            app.state.color_style,
+        ),
         file_viewer_area,
         &mut app.file_list.state,
     );
@@ -65,7 +69,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     f.render_widget(draw_log_view(), logs_area);
 }
 
-fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
+fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry], color: Color) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
@@ -81,11 +85,7 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry]) -> List<'a> {
                 .title(title_path)
                 .style(Style::default().add_modifier(Modifier::BOLD)),
         )
-        .highlight_style(
-            Style::default()
-                .bg(Color::Cyan)
-                .add_modifier(Modifier::BOLD),
-        )
+        .highlight_style(Style::default().bg(color).add_modifier(Modifier::BOLD))
         .highlight_symbol("> ")
 }
 
@@ -122,7 +122,10 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
     draw_audio_spectrum(f, app, audio_spectrum_area);
 
     // Song progress bar
-    f.render_widget(draw_song_progress(&app.player), progress_bar_area);
+    f.render_widget(
+        draw_song_progress(&app.player, app.state.color_style),
+        progress_bar_area,
+    );
 }
 
 fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
@@ -136,13 +139,13 @@ fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
         .style(Style::default().remove_modifier(Modifier::BOLD))
 }
 
-fn draw_song_progress(player: &Mp3Player) -> Gauge {
+fn draw_song_progress(player: &Mp3Player, color: Color) -> Gauge {
     let label = player
         .get_text_progress()
         .unwrap_or_else(|| String::from("-/-"));
     Gauge::default()
         .block(Block::default())
-        .gauge_style(Style::default().fg(Color::Cyan))
+        .gauge_style(Style::default().fg(color))
         .ratio(player.get_current_song_percentage_progress())
         .label(Span::styled(
             label,
@@ -166,8 +169,8 @@ fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) 
                 BarChart::default()
                     .data(&data.audio_spectrum)
                     .bar_width(rect.width / data.audio_spectrum_band_count as u16)
-                    .style(Style::default().fg(Color::Cyan))
-                    .value_style(Style::default().fg(Color::Cyan)),
+                    .style(Style::default().fg(app.state.color_style))
+                    .value_style(Style::default().fg(app.state.color_style)),
                 rect,
             );
         }
@@ -181,7 +184,7 @@ fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) 
             data.update_spectrum(unsigned_spectrum);
             let dataset = Dataset::default()
                 .marker(symbols::Marker::Dot)
-                .style(Style::default().fg(Color::Cyan))
+                .style(Style::default().fg(app.state.color_style))
                 .graph_type(GraphType::Line)
                 .data(&data.audio_spectrum);
             f.render_widget(
