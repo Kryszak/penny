@@ -4,7 +4,7 @@ use crate::{
         ui, App,
         AppActionResult::Exit,
     },
-    input::{Events, InputEvent},
+    input::{AppEvent, Events},
 };
 use crossterm::{
     event::DisableMouseCapture,
@@ -46,7 +46,7 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
         terminal.draw(|f| ui(f, app))?;
 
         match events.next() {
-            InputEvent::Input(key_code) => {
+            AppEvent::Input(key_code) => {
                 if let Some(action) = Actions::from(key_code) {
                     if let Exit = app.do_action(action) {
                         app.do_action(Action::StopPlayback);
@@ -55,7 +55,10 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
                     }
                 }
             }
-            InputEvent::Tick => {}
+            AppEvent::Tick => {}
+            AppEvent::Playback(event) => {
+                app.do_action(Actions::from_event(event));
+            }
         };
     }
 

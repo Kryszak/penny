@@ -2,7 +2,7 @@ use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers};
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
-        mpsc::{self, Receiver},
+        mpsc::{self, Receiver, Sender},
         Arc,
     },
     thread,
@@ -25,18 +25,25 @@ impl KeyPress {
 }
 
 /// Type of event in app
-pub enum InputEvent {
+pub enum AppEvent {
     /// Key pressed by user
     Input(KeyPress),
     /// Defined span of time elapsed in app
     Tick,
+    /// Event occurred during playback
+    Playback(PlaybackEvent),
+}
+
+pub enum PlaybackEvent {
+    SongFinished,
 }
 
 /// Event handling in application
 /// Captures key presses and allows to poll for them
 /// In case of no key press, sends [Tick](InputEvent::Tick) event
 pub struct Events {
-    rx: Receiver<InputEvent>,
+    tx: Sender<AppEvent>,
+    rx: Receiver<AppEvent>,
     stop_capture: Arc<AtomicBool>,
 }
 
@@ -47,28 +54,38 @@ impl Events {
         let stop_capture = Arc::new(AtomicBool::new(false));
 
         let event_stop_capture = stop_capture.clone();
+        let loop_tx = tx.clone();
         thread::spawn(move || {
             loop {
                 // poll for tick rate duration, if no event, sent tick event.
                 if crossterm::event::poll(tick_rate).unwrap() {
                     if let event::Event::Key(key_event) = event::read().unwrap() {
-                        tx.send(InputEvent::Input(KeyPress::new(key_event)))
+                        loop_tx
+                            .send(AppEvent::Input(KeyPress::new(key_event)))
                             .unwrap();
                     }
                 }
-                tx.send(InputEvent::Tick).unwrap();
+                loop_tx.send(AppEvent::Tick).unwrap();
                 if event_stop_capture.load(Ordering::Relaxed) {
                     break;
                 }
             }
         });
 
-        Events { rx, stop_capture }
+        Events {
+            tx,
+            rx,
+            stop_capture,
+        }
+    }
+
+    pub fn send(&mut self, event: PlaybackEvent) {
+        self.tx.send(AppEvent::Playback(event)).unwrap();
     }
 
     /// Fetches next key press event or returns [Tick](InputEvent::Tick)
-    pub fn next(&mut self) -> InputEvent {
-        self.rx.recv().unwrap_or(InputEvent::Tick)
+    pub fn next(&mut self) -> AppEvent {
+        self.rx.recv().unwrap_or(AppEvent::Tick)
     }
 
     /// Stops keypress capture thread

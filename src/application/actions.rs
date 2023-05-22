@@ -1,4 +1,4 @@
-use crate::input::events::KeyPress;
+use crate::input::events::{KeyPress, PlaybackEvent};
 use crossterm::event::KeyCode;
 
 /// Actions available in app
@@ -17,6 +17,7 @@ pub enum Action {
     StopPlayback,
     ChangeVisualization,
     ChangeColor,
+    OnSongFinished,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -40,6 +41,12 @@ impl Actions {
             KeyCode::Char('v') => Some(Action::ChangeVisualization),
             KeyCode::Char('c') => Some(Action::ChangeColor),
             _ => None,
+        }
+    }
+
+    pub fn from_event(event: PlaybackEvent) -> Action {
+        match event {
+            PlaybackEvent::SongFinished => Action::OnSongFinished,
         }
     }
 }

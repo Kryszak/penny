@@ -1,4 +1,4 @@
-use log::LevelFilter;
+use log::{info, LevelFilter};
 use ratatui::style::Color;
 
 use super::visualization_state::BarChartData;
@@ -88,9 +88,14 @@ impl App {
             }
             Action::ChangeVisualization => self.change_visualization_style(),
             Action::ChangeColor => self.change_color(),
+            Action::OnSongFinished => self.handle_song_finished(),
         };
 
         AppActionResult::Continue
+    }
+
+    fn handle_song_finished(&self) {
+        info!("Handling finished song!");
     }
 
     fn change_visualization_style(&mut self) {
