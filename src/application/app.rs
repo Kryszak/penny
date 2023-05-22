@@ -8,6 +8,7 @@ use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
 use crate::external::notifier::notify_playback_stopped;
 use crate::input::events;
+use crate::queue::queue_view::QueueView;
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
 
 pub struct AppState {
@@ -37,6 +38,7 @@ pub enum AppActionResult {
 pub struct App {
     pub state: AppState,
     pub file_list: FileViewerList,
+    pub queue_view: QueueView,
     pub player: Mp3Player,
 }
 
@@ -59,6 +61,7 @@ impl App {
                 band_count: config.band_count,
             },
             file_list,
+            queue_view: QueueView::new(),
             player: Mp3Player::new(events),
         })
     }
@@ -84,7 +87,9 @@ impl App {
             Action::SelectSongFile => {
                 if let Some(file_entry) = self.file_list.get_selected_file_entry() {
                     if file_entry.is_file {
+                        // TODO add to queue instead of directly playing
                         self.player.set_song_file(file_entry);
+                        // self.queue_view.add(file_entry);
                     }
                 }
             }

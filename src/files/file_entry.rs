@@ -1,7 +1,7 @@
 use std::path::Path;
 
 /// Structure representing file in file viewer.
-#[derive(Debug, Eq, Ord, PartialEq, PartialOrd)]
+#[derive(Debug, Eq, Ord, PartialEq, PartialOrd, Clone)]
 pub struct FileEntry {
     /// Full path of given file
     pub path: String,

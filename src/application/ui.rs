@@ -1,5 +1,8 @@
 use super::{app::VisualizationStyle, App};
-use crate::{files::FileEntry, player::Mp3Player};
+use crate::{
+    files::FileEntry,
+    player::{Mp3Player, SelectedSongFile},
+};
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -40,16 +43,25 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     };
 
     let logs_constraint = match app.state.logs_visible {
-        true => Constraint::Percentage(25),
+        true => Constraint::Max(25),
         false => Constraint::Length(0),
     };
 
     let main_view = Layout::default()
         .direction(Direction::Horizontal)
-        .constraints([Constraint::Min(60), help_constraint, logs_constraint].as_ref())
+        .constraints(
+            [
+                Constraint::Max(60),
+                Constraint::Min(30),
+                help_constraint,
+                logs_constraint,
+            ]
+            .as_ref(),
+        )
         .split(area);
 
-    let (file_viewer_area, help_area, logs_area) = (main_view[0], main_view[1], main_view[2]);
+    let (file_viewer_area, queue_view_area, help_area, logs_area) =
+        (main_view[0], main_view[1], main_view[2], main_view[3]);
 
     // File explorer
     f.render_stateful_widget(
@@ -60,6 +72,13 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
         ),
         file_viewer_area,
         &mut app.file_list.state,
+    );
+
+    // Playing queue
+    f.render_stateful_widget(
+        draw_queue_list("Queue", &app.queue_view.items, app.state.color_style),
+        queue_view_area,
+        &mut app.queue_view.state,
     );
 
     // Help
@@ -75,6 +94,33 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry], color: Color)
         .map(|x| {
             ListItem::new(Spans::from(Span::styled(&x.name, Style::default())))
                 .style(Style::default().remove_modifier(Modifier::BOLD))
+        })
+        .collect();
+
+    List::new(items)
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .title(title_path)
+                .style(Style::default().add_modifier(Modifier::BOLD)),
+        )
+        .highlight_style(Style::default().bg(color).add_modifier(Modifier::BOLD))
+        .highlight_symbol("> ")
+}
+
+fn draw_queue_list<'a>(
+    title_path: &'a str,
+    files: &'a [SelectedSongFile],
+    color: Color,
+) -> List<'a> {
+    let items: Vec<ListItem> = files
+        .iter()
+        .map(|x| {
+            ListItem::new(Spans::from(Span::styled(
+                x.display_short(),
+                Style::default(),
+            )))
+            .style(Style::default().remove_modifier(Modifier::BOLD))
         })
         .collect();
 
