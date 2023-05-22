@@ -1,8 +1,13 @@
 use application::App;
 use clap::Parser;
 use cli::config::Config;
+use input::Events;
 use runner::run_app;
-use std::io;
+use std::{
+    io,
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 mod application;
 mod cli;
@@ -14,9 +19,11 @@ mod runner;
 
 fn main() -> io::Result<()> {
     let config = Config::parse();
-    match App::new(&config) {
+    let tick_rate = Duration::from_millis(150);
+    let events = Arc::new(Mutex::new(Events::new(tick_rate)));
+    match App::new(&config, events.clone()) {
         Some(mut app) => {
-            run_app(&mut app)?;
+            run_app(&mut app, events)?;
         }
         None => {
             println!("Failed to open {}, terminating.", config.starting_directory)

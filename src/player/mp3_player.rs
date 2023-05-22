@@ -1,7 +1,8 @@
 use crate::{
     application::actions::Action,
-    external::notifier::{notify_playback_start, notify_playback_stopped},
+    external::notifier::notify_playback_start,
     files::FileEntry,
+    input::{events::PlaybackEvent::SongFinished, Events},
     player::SelectedSongFile,
     player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
 };
@@ -50,10 +51,11 @@ pub struct Mp3Player {
     frames: Vec<Frame>,
     /// current frame spectrum analyzed data
     spectrum: Arc<Mutex<Vec<f32>>>,
+    events: Arc<Mutex<Events>>,
 }
 
 impl Mp3Player {
-    pub fn new() -> Self {
+    pub fn new(events: Arc<Mutex<Events>>) -> Self {
         Mp3Player {
             song: None,
             state: Arc::new(Mutex::new(PlayerState::New)),
@@ -62,6 +64,7 @@ impl Mp3Player {
             frames: vec![],
             current_playback_ms_elapsed: Arc::new(Mutex::new(0.0)),
             spectrum: Arc::new(Mutex::new(vec![])),
+            events,
         }
     }
 
@@ -149,6 +152,7 @@ impl Mp3Player {
         let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
         let spectrum_data = self.spectrum.clone();
+        let event_sender = self.events.clone();
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
@@ -187,7 +191,7 @@ impl Mp3Player {
             *playback_progress.lock().unwrap() = 0.0;
             *spectrum_data.lock().unwrap() = vec![];
             debug!("Playback finished.");
-            notify_playback_stopped();
+            event_sender.lock().unwrap().send(SongFinished);
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
         });

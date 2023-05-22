@@ -1,8 +1,13 @@
+use std::sync::{Arc, Mutex};
+
+use events::Events;
 use log::{info, LevelFilter};
 use ratatui::style::Color;
 
 use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
+use crate::external::notifier::notify_playback_stopped;
+use crate::input::events;
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
 
 pub struct AppState {
@@ -36,7 +41,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(config: &Config) -> Option<Self> {
+    pub fn new(config: &Config, events: Arc<Mutex<Events>>) -> Option<Self> {
         let log_level = match config.debug {
             true => log::LevelFilter::Debug,
             false => log::LevelFilter::Info,
@@ -54,7 +59,7 @@ impl App {
                 band_count: config.band_count,
             },
             file_list,
-            player: Mp3Player::new(),
+            player: Mp3Player::new(events),
         })
     }
 
@@ -96,6 +101,7 @@ impl App {
 
     fn handle_song_finished(&self) {
         info!("Handling finished song!");
+        notify_playback_stopped();
     }
 
     fn change_visualization_style(&mut self) {

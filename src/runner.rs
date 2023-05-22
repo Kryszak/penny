@@ -16,10 +16,13 @@ use crossterm::{
 };
 use log::{info, LevelFilter};
 use ratatui::{backend::CrosstermBackend, Terminal};
-use std::{io, time::Duration};
+use std::{
+    io,
+    sync::{Arc, Mutex},
+};
 
 /// Application runner handling terminal setup as well as managing app lifetime
-pub fn run_app(app: &mut App) -> io::Result<()> {
+pub fn run_app(app: &mut App, events: Arc<Mutex<Events>>) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
 
@@ -39,18 +42,17 @@ pub fn run_app(app: &mut App) -> io::Result<()> {
     terminal.hide_cursor()?;
     info!("Welcome to penny!");
 
-    let tick_rate = Duration::from_millis(150);
-    let mut events = Events::new(tick_rate);
-
     loop {
         terminal.draw(|f| ui(f, app))?;
 
-        match events.next() {
+        let mut events_ref = events.lock().unwrap();
+
+        match events_ref.next() {
             AppEvent::Input(key_code) => {
                 if let Some(action) = Actions::from(key_code) {
                     if let Exit = app.do_action(action) {
                         app.do_action(Action::StopPlayback);
-                        events.close();
+                        events_ref.close();
                         break;
                     }
                 }
