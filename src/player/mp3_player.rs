@@ -2,7 +2,7 @@ use crate::{
     application::actions::Action,
     external::notifier::notify_playback_start,
     files::FileEntry,
-    input::{events::PlaybackEvent::SongFinished, Events},
+    input::{events::PlaybackEvent::SongFinished, EventBus},
     player::SelectedSongFile,
     player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
 };
@@ -51,11 +51,11 @@ pub struct Mp3Player {
     frames: Vec<Frame>,
     /// current frame spectrum analyzed data
     spectrum: Arc<Mutex<Vec<f32>>>,
-    events: Arc<Mutex<Events>>,
+    events: Arc<Mutex<EventBus>>,
 }
 
 impl Mp3Player {
-    pub fn new(events: Arc<Mutex<Events>>) -> Self {
+    pub fn new(events: Arc<Mutex<EventBus>>) -> Self {
         Mp3Player {
             song: None,
             state: Arc::new(Mutex::new(PlayerState::New)),

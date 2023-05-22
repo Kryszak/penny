@@ -6,7 +6,7 @@ use std::time::Duration;
 pub struct SelectedSongFile {
     pub metadata: Mp3Metadata,
     pub duration: Duration,
-    file_entry: FileEntry,
+    pub file_entry: FileEntry,
 }
 
 impl SelectedSongFile {

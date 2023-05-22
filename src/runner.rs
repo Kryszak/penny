@@ -4,7 +4,7 @@ use crate::{
         ui, App,
         AppActionResult::Exit,
     },
-    input::{AppEvent, Events},
+    input::{AppEvent, EventBus},
 };
 use crossterm::{
     event::DisableMouseCapture,
@@ -22,7 +22,7 @@ use std::{
 };
 
 /// Application runner handling terminal setup as well as managing app lifetime
-pub fn run_app(app: &mut App, events: Arc<Mutex<Events>>) -> io::Result<()> {
+pub fn run_app(app: &mut App, events: Arc<Mutex<EventBus>>) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
 

@@ -41,15 +41,15 @@ pub enum PlaybackEvent {
 /// Event handling in application
 /// Captures key presses and allows to poll for them
 /// In case of no key press, sends [Tick](InputEvent::Tick) event
-pub struct Events {
+pub struct EventBus {
     tx: Sender<AppEvent>,
     rx: Receiver<AppEvent>,
     stop_capture: Arc<AtomicBool>,
 }
 
-impl Events {
+impl EventBus {
     /// Creates event instance starting key press capture loop in separate thread
-    pub fn new(tick_rate: Duration) -> Events {
+    pub fn new(tick_rate: Duration) -> EventBus {
         let (tx, rx) = mpsc::channel();
         let stop_capture = Arc::new(AtomicBool::new(false));
 
@@ -72,7 +72,7 @@ impl Events {
             }
         });
 
-        Events {
+        EventBus {
             tx,
             rx,
             stop_capture,

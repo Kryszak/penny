@@ -247,8 +247,7 @@ fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
     let mut help_text = vec![
         Spans::from("h: Toogle help"),
-        Spans::from("f: Focus file viewer"),
-        Spans::from("\u{23CE}: Play selected file"),
+        Spans::from("f: Focus files/queue"),
         Spans::from("v: Change visualization style"),
         Spans::from("q: Quit"),
     ];
@@ -265,6 +264,8 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
 
     help_text.append(&mut player_help);
 
+    // TODO add help text for queue
+
     if show_file_viewer_help {
         let mut file_viewer_help_text = vec![
             Spans::from(""),
@@ -272,6 +273,7 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
                 "File viewer",
                 Style::default().add_modifier(Modifier::BOLD),
             )),
+            Spans::from("\u{23CE}: Add to queue"),
             Spans::from("\u{2190}: Directory up"),
             Spans::from("\u{2192}: Enter directory"),
             Spans::from("\u{2191}: Select file up"),

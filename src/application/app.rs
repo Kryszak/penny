@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use events::Events;
+use events::EventBus;
 use log::{info, LevelFilter};
 use ratatui::style::Color;
 
@@ -43,7 +43,7 @@ pub struct App {
 }
 
 impl App {
-    pub fn new(config: &Config, events: Arc<Mutex<Events>>) -> Option<Self> {
+    pub fn new(config: &Config, events: Arc<Mutex<EventBus>>) -> Option<Self> {
         let log_level = match config.debug {
             true => log::LevelFilter::Debug,
             false => log::LevelFilter::Info,
@@ -72,27 +72,34 @@ impl App {
             Action::Quit => return AppActionResult::Exit,
             Action::ToggleHelp => self.state.help_visible = !self.state.help_visible,
             Action::ToggleLogs => self.state.logs_visible = !self.state.logs_visible,
-            Action::FocusFileViewer => {
+            Action::ChangeViewFocus => {
                 self.state.file_viewer_focused = !self.state.file_viewer_focused;
-                self.file_list.focus();
+                self.file_list.toggle_focus();
+                self.queue_view.toggle_focus();
             }
-            Action::FileViewerUp
-            | Action::FileViewerDown
-            | Action::FileViewerDirUp
-            | Action::FileViewerEnterDir => {
+            Action::ViewerUp | Action::ViewerDown => match self.state.file_viewer_focused {
+                true => self.file_list.do_action(action),
+                false => self.queue_view.do_action(action),
+            },
+            Action::FileViewerDirUp | Action::FileViewerEnterDir => {
                 if self.state.file_viewer_focused {
                     self.file_list.do_action(action);
                 }
             }
-            Action::SelectSongFile => {
-                if let Some(file_entry) = self.file_list.get_selected_file_entry() {
-                    if file_entry.is_file {
-                        // TODO add to queue instead of directly playing
-                        self.player.set_song_file(file_entry);
-                        // self.queue_view.add(file_entry);
+            Action::Select => match self.state.file_viewer_focused {
+                true => {
+                    if let Some(file_entry) = self.file_list.get_selected_file_entry() {
+                        if file_entry.is_file {
+                            self.queue_view.add(file_entry);
+                        }
                     }
                 }
-            }
+                false => {
+                    if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
+                        self.player.set_song_file(&selected_song.file_entry);
+                    }
+                }
+            },
             Action::TogglePlayback | Action::StopPlayback => {
                 self.player.handle_action(action);
             }
@@ -106,6 +113,7 @@ impl App {
 
     fn handle_song_finished(&self) {
         info!("Handling finished song!");
+        // TODO play next song from queue
         notify_playback_stopped();
     }
 
