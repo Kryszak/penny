@@ -300,6 +300,7 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
             Spans::from("\u{23CE}: Play song"),
             Spans::from("\u{2191}: Select song up"),
             Spans::from("\u{2193}: Select song down"),
+            Spans::from("d: Remove song"),
         ];
         help_text.append(&mut queue_view_help_test);
     }

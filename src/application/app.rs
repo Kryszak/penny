@@ -116,9 +116,6 @@ impl App {
             Action::DeleteFromQueue => {
                 if !self.state.file_viewer_focused {
                     self.queue_view.do_action(action);
-                    if self.player.is_playing() {
-                        self.player.stop_playback(false);
-                    }
                     if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
                         self.player.set_song_file(selected_song.clone());
                     }

@@ -32,6 +32,8 @@ enum PlayerState {
     Playing,
     /// Playback paused
     Paused,
+    /// Playback finished
+    Stopped,
 }
 
 /// Structure responsible for playing mp3 files.
@@ -70,20 +72,11 @@ impl Mp3Player {
     /// Sets provided file as current song in player and starts playback.
     pub fn set_song_file(&mut self, song_file: SongFile) {
         //! In case player is currently playing other file, stops it
-        {
-            match *self.state.lock().unwrap() {
-                PlayerState::Playing | PlayerState::Paused => {
-                    self.stop.store(true, Ordering::Relaxed);
-                }
-                _ => {}
-            }
-            while self.stop.load(Ordering::Relaxed) {}
+        if self.is_playing() {
+            self.stop_playback(false);
         }
         self.song = Some(song_file);
-        {
-            let mut state = self.state.lock().unwrap();
-            *state = PlayerState::SongSelected;
-        }
+        *self.state.lock().unwrap() = PlayerState::SongSelected;
     }
 
     pub fn handle_action(&mut self, action: Action) {
@@ -98,7 +91,7 @@ impl Mp3Player {
     pub fn is_playing(&self) -> bool {
         match *self.state.lock().unwrap() {
             PlayerState::Playing | PlayerState::Paused => true,
-            PlayerState::New | PlayerState::SongSelected => false,
+            PlayerState::New | PlayerState::SongSelected | PlayerState::Stopped => false,
         }
     }
 
@@ -109,6 +102,7 @@ impl Mp3Player {
             PlayerState::SongSelected => String::from(" \u{23F9} Stop "),
             PlayerState::Playing => String::from(" \u{23F5} Playing "),
             PlayerState::Paused => String::from(" \u{23F8} Paused "),
+            PlayerState::Stopped => String::from(" \u{23F9} Stop "),
         }
     }
 
@@ -213,7 +207,7 @@ impl Mp3Player {
             }
             should_notify.store(true, Ordering::Relaxed);
             let mut state = player_state.lock().unwrap();
-            *state = PlayerState::SongSelected;
+            *state = PlayerState::Stopped;
         });
     }
 
@@ -237,6 +231,11 @@ impl Mp3Player {
                 self.paused.store(false, Ordering::Relaxed);
                 debug!("Resumed playback");
             }
+            PlayerState::Stopped => {
+                debug!("Now playing {:?}", self.song.as_ref().unwrap().display());
+                self.play();
+                *state = PlayerState::Playing;
+            }
         }
     }
 
@@ -244,6 +243,7 @@ impl Mp3Player {
         self.notify_song_end
             .store(with_notification, Ordering::Relaxed);
         self.stop.store(true, Ordering::Relaxed);
+        self.wait_for_stopped_state();
         if with_notification {
             notify_playback_stopped();
         }
@@ -257,5 +257,14 @@ impl Mp3Player {
 
     fn get_song_elapsed_seconds(&self) -> f64 {
         *self.current_playback_ms_elapsed.lock().unwrap() / 1000.0
+    }
+
+    fn wait_for_stopped_state(&self) {
+        loop {
+            let state = self.state.lock().unwrap();
+            if *state == PlayerState::Stopped {
+                break;
+            }
+        }
     }
 }
