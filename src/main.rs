@@ -15,8 +15,8 @@ mod external;
 mod files;
 mod input;
 mod player;
-mod runner;
 mod queue;
+mod runner;
 
 fn main() -> io::Result<()> {
     let config = Config::parse();

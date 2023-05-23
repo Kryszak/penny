@@ -1,6 +1,6 @@
 use log::{error, trace};
-use std::{fs, io, path::Path};
 use ratatui::widgets::ListState;
+use std::{fs, io, path::Path};
 
 use crate::application::actions::Action;
 
@@ -33,6 +33,10 @@ impl FileViewerList {
                 current_directory: dir_name.to_string(),
                 previously_selected_index: None,
                 parent_selected_index: None,
+            })
+            .map(|mut viewer| {
+                viewer.focus_first_entry_if_available();
+                viewer
             })
             .ok()
     }

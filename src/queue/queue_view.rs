@@ -1,14 +1,11 @@
-use std::time::Duration;
-
 use log::{error, trace};
 use ratatui::widgets::ListState;
 
-use crate::{application::actions::Action, files::FileEntry, player::SelectedSongFile};
+use crate::{application::actions::Action, files::FileEntry, queue::SongFile};
 
 pub struct QueueView {
     pub state: ListState,
-    pub items: Vec<SelectedSongFile>,
-    previously_selected_index: Option<usize>,
+    pub items: Vec<SongFile>,
 }
 
 impl QueueView {
@@ -16,7 +13,6 @@ impl QueueView {
         QueueView {
             state: ListState::default(),
             items: vec![],
-            previously_selected_index: None,
         }
     }
 
@@ -24,6 +20,7 @@ impl QueueView {
         match action {
             Action::ViewerUp => self.previous(),
             Action::ViewerDown => self.next(),
+            Action::DeleteFromQueue => self.remove_current(),
             _ => error!("Unsupported queue viewer action: {:?}", action),
         }
     }
@@ -31,23 +28,17 @@ impl QueueView {
     pub fn toggle_focus(&mut self) {
         match self.state.selected() {
             Some(_) => {
-                self.previously_selected_index = self.state.selected();
-                self.state = ListState::default();
                 trace!("Queue viewer lost focus");
             }
             None => {
-                match self.previously_selected_index {
-                    Some(_) => self.state.select(self.previously_selected_index),
-                    None => self.focus_first_entry_if_available(),
-                }
+                self.focus_first_entry_if_available();
                 trace!("Queue viewer received focus");
             }
         };
     }
 
     pub fn add(&mut self, file_entry: &FileEntry) {
-        self.items
-            .push(SelectedSongFile::new(&file_entry, Duration::ZERO));
+        self.items.push(SongFile::new(file_entry));
     }
 
     fn next(&mut self) {
@@ -82,7 +73,18 @@ impl QueueView {
         }
     }
 
-    pub fn get_selected_file_entry(&self) -> Option<&SelectedSongFile> {
+    fn remove_current(&mut self) {
+        if let Some(index) = self.state.selected() {
+            self.items.remove(index);
+            if !self.items.is_empty() && self.items.len() > index {
+                self.state.select(Some(index));
+            } else {
+                self.focus_first_entry_if_available();
+            }
+        }
+    }
+
+    pub fn get_selected_file_entry(&self) -> Option<&SongFile> {
         self.state.selected().map(|i| &self.items[i])
     }
 

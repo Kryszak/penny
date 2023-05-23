@@ -16,6 +16,7 @@ minimp3 = "0.5.1"
 clap = { version = "4.3.0", features = ["derive"] }
 rustfft = "6.1.0"
 notify-rust = "4"
+mp3-duration = "0.1.10"
 
 [dev-dependencies]
 tempdir = "0.3.7"

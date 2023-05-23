@@ -18,6 +18,7 @@ pub enum Action {
     ChangeVisualization,
     ChangeColor,
     OnSongFinished,
+    DeleteFromQueue,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -36,6 +37,7 @@ impl Actions {
             KeyCode::Right => Some(Action::FileViewerEnterDir),
             KeyCode::Char('f') => Some(Action::ChangeViewFocus),
             KeyCode::Enter => Some(Action::Select),
+            KeyCode::Char('d') => Some(Action::DeleteFromQueue),
             KeyCode::Char('p') => Some(Action::TogglePlayback),
             KeyCode::Char('s') => Some(Action::StopPlayback),
             KeyCode::Char('v') => Some(Action::ChangeVisualization),

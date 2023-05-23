@@ -6,7 +6,6 @@ use ratatui::style::Color;
 
 use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
-use crate::external::notifier::notify_playback_stopped;
 use crate::input::events;
 use crate::queue::queue_view::QueueView;
 use crate::{cli::config::Config, files::FileViewerList, player::Mp3Player};
@@ -52,7 +51,7 @@ impl App {
             state: AppState {
                 help_visible: true,
                 logs_visible: config.debug,
-                file_viewer_focused: false,
+                file_viewer_focused: true,
                 log_level,
                 visualization_style: VisualizationStyle::Bar {
                     data: BarChartData::new(config.band_count),
@@ -91,12 +90,20 @@ impl App {
                     if let Some(file_entry) = self.file_list.get_selected_file_entry() {
                         if file_entry.is_file {
                             self.queue_view.add(file_entry);
+                            if self.queue_view.items.len() == 1 {
+                                self.queue_view.do_action(Action::ViewerDown);
+                                self.player.set_song_file(
+                                    self.queue_view.get_selected_file_entry().unwrap().clone(),
+                                );
+                                self.player.handle_action(Action::TogglePlayback);
+                            }
                         }
                     }
                 }
                 false => {
                     if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
-                        self.player.set_song_file(&selected_song.file_entry);
+                        self.player.set_song_file(selected_song.clone());
+                        self.player.handle_action(Action::TogglePlayback);
                     }
                 }
             },
@@ -106,15 +113,30 @@ impl App {
             Action::ChangeVisualization => self.change_visualization_style(),
             Action::ChangeColor => self.change_color(),
             Action::OnSongFinished => self.handle_song_finished(),
+            Action::DeleteFromQueue => {
+                if !self.state.file_viewer_focused {
+                    self.queue_view.do_action(action);
+                    if self.player.is_playing() {
+                        self.player.stop_playback(false);
+                    }
+                    if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
+                        self.player.set_song_file(selected_song.clone());
+                    }
+                    self.player.handle_action(Action::TogglePlayback);
+                }
+            }
         };
 
         AppActionResult::Continue
     }
 
-    fn handle_song_finished(&self) {
-        info!("Handling finished song!");
-        // TODO play next song from queue
-        notify_playback_stopped();
+    fn handle_song_finished(&mut self) {
+        info!("Playing next song from queue...");
+        self.queue_view.do_action(Action::ViewerDown);
+        if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
+            self.player.set_song_file(selected_song.clone());
+            self.player.handle_action(Action::TogglePlayback);
+        }
     }
 
     fn change_visualization_style(&mut self) {

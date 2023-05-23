@@ -1,9 +1,9 @@
 use log::debug;
 use notify_rust::Notification;
 
-use crate::player::SelectedSongFile;
+use crate::queue::SongFile;
 
-pub fn notify_playback_start(song_metadata: &SelectedSongFile) {
+pub fn notify_playback_start(song_metadata: &SongFile) {
     if Notification::new()
         .summary("Penny")
         .body(&song_metadata.display_short())

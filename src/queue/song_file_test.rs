@@ -1,11 +1,11 @@
 #[cfg(test)]
 mod tests {
-    use std::{fs::File, time::Duration};
+    use std::fs::File;
 
     use id3::{Tag, TagLike};
     use tempdir::TempDir;
 
-    use crate::{files::FileEntry, player::selected_song::SelectedSongFile};
+    use crate::{files::FileEntry, queue::song_file::SongFile};
 
     #[test]
     fn should_format_with_artist_and_title() -> Result<(), Box<dyn std::error::Error>> {
@@ -16,7 +16,7 @@ mod tests {
         let file_entry = FileEntry::new(&dummy_mp3_file_path);
 
         // when
-        let result = SelectedSongFile::new(&file_entry, Duration::from_secs(10));
+        let result = SongFile::new(&file_entry);
 
         // then
         assert_eq!(
@@ -38,7 +38,7 @@ mod tests {
         let file_entry = FileEntry::new(&dummy_mp3_file_path);
 
         // when
-        let result = SelectedSongFile::new(&file_entry, Duration::from_secs(10));
+        let result = SongFile::new(&file_entry);
 
         // then
         assert_eq!(

@@ -1,8 +1,6 @@
 use super::{app::VisualizationStyle, App};
-use crate::{
-    files::FileEntry,
-    player::{Mp3Player, SelectedSongFile},
-};
+use crate::queue::SongFile;
+use crate::{files::FileEntry, player::Mp3Player};
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
@@ -10,7 +8,8 @@ use ratatui::{
     symbols,
     text::{Span, Spans},
     widgets::{
-        Axis, BarChart, Block, Borders, Chart, Dataset, Gauge, GraphType, List, ListItem, Paragraph,
+        Axis, BarChart, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, List,
+        ListItem, Paragraph,
     },
     Frame,
 };
@@ -69,6 +68,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
             &app.file_list.current_directory,
             &app.file_list.items,
             app.state.color_style,
+            app.state.file_viewer_focused,
         ),
         file_viewer_area,
         &mut app.file_list.state,
@@ -76,7 +76,12 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
 
     // Playing queue
     f.render_stateful_widget(
-        draw_queue_list("Queue", &app.queue_view.items, app.state.color_style),
+        draw_queue_list(
+            "Queue",
+            &app.queue_view.items,
+            app.state.color_style,
+            !app.state.file_viewer_focused,
+        ),
         queue_view_area,
         &mut app.queue_view.state,
     );
@@ -88,7 +93,12 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     f.render_widget(draw_log_view(), logs_area);
 }
 
-fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry], color: Color) -> List<'a> {
+fn draw_file_list<'a>(
+    title_path: &'a str,
+    files: &'a [FileEntry],
+    color: Color,
+    focused: bool,
+) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
@@ -97,10 +107,14 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry], color: Color)
         })
         .collect();
 
+    let (border_type, border_color) = get_border_style(focused, color);
+
     List::new(items)
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(border_type)
+                .border_style(Style::default().fg(border_color))
                 .title(title_path)
                 .style(Style::default().add_modifier(Modifier::BOLD)),
         )
@@ -110,8 +124,9 @@ fn draw_file_list<'a>(title_path: &'a str, files: &'a [FileEntry], color: Color)
 
 fn draw_queue_list<'a>(
     title_path: &'a str,
-    files: &'a [SelectedSongFile],
+    files: &'a [SongFile],
     color: Color,
+    focused: bool,
 ) -> List<'a> {
     let items: Vec<ListItem> = files
         .iter()
@@ -124,15 +139,26 @@ fn draw_queue_list<'a>(
         })
         .collect();
 
+    let (border_type, border_color) = get_border_style(focused, color);
+
     List::new(items)
         .block(
             Block::default()
                 .borders(Borders::ALL)
+                .border_type(border_type)
+                .border_style(Style::default().fg(border_color))
                 .title(title_path)
                 .style(Style::default().add_modifier(Modifier::BOLD)),
         )
         .highlight_style(Style::default().bg(color).add_modifier(Modifier::BOLD))
         .highlight_symbol("> ")
+}
+
+fn get_border_style(focused: bool, accent_color: Color) -> (BorderType, Color) {
+    match focused {
+        true => (BorderType::Double, accent_color),
+        false => (BorderType::Plain, Color::White),
+    }
 }
 
 fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
@@ -264,7 +290,19 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
 
     help_text.append(&mut player_help);
 
-    // TODO add help text for queue
+    if !show_file_viewer_help {
+        let mut queue_view_help_test = vec![
+            Spans::from(""),
+            Spans::from(Span::styled(
+                "Playback queue",
+                Style::default().add_modifier(Modifier::BOLD),
+            )),
+            Spans::from("\u{23CE}: Play song"),
+            Spans::from("\u{2191}: Select song up"),
+            Spans::from("\u{2193}: Select song down"),
+        ];
+        help_text.append(&mut queue_view_help_test);
+    }
 
     if show_file_viewer_help {
         let mut file_viewer_help_text = vec![
