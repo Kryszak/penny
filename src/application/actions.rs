@@ -1,4 +1,4 @@
-use crate::input::events::KeyPress;
+use crate::input::events::{KeyPress, PlaybackEvent};
 use crossterm::event::KeyCode;
 
 /// Actions available in app
@@ -7,16 +7,18 @@ pub enum Action {
     Quit,
     ToggleHelp,
     ToggleLogs,
-    FocusFileViewer,
-    FileViewerUp,
-    FileViewerDown,
+    ChangeViewFocus,
+    ViewerUp,
+    ViewerDown,
     FileViewerDirUp,
     FileViewerEnterDir,
-    SelectSongFile,
+    Select,
     TogglePlayback,
     StopPlayback,
     ChangeVisualization,
     ChangeColor,
+    OnSongFinished,
+    DeleteFromQueue,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -30,16 +32,23 @@ impl Actions {
             KeyCode::Char('h') => Some(Action::ToggleHelp),
             KeyCode::Char('l') => Some(Action::ToggleLogs),
             KeyCode::Left => Some(Action::FileViewerDirUp),
-            KeyCode::Down => Some(Action::FileViewerDown),
-            KeyCode::Up => Some(Action::FileViewerUp),
+            KeyCode::Down => Some(Action::ViewerDown),
+            KeyCode::Up => Some(Action::ViewerUp),
             KeyCode::Right => Some(Action::FileViewerEnterDir),
-            KeyCode::Char('f') => Some(Action::FocusFileViewer),
-            KeyCode::Enter => Some(Action::SelectSongFile),
+            KeyCode::Char('f') => Some(Action::ChangeViewFocus),
+            KeyCode::Enter => Some(Action::Select),
+            KeyCode::Char('d') => Some(Action::DeleteFromQueue),
             KeyCode::Char('p') => Some(Action::TogglePlayback),
             KeyCode::Char('s') => Some(Action::StopPlayback),
             KeyCode::Char('v') => Some(Action::ChangeVisualization),
             KeyCode::Char('c') => Some(Action::ChangeColor),
             _ => None,
+        }
+    }
+
+    pub fn from_event(event: PlaybackEvent) -> Action {
+        match event {
+            PlaybackEvent::SongFinished => Action::OnSongFinished,
         }
     }
 }

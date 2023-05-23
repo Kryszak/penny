@@ -34,13 +34,17 @@ impl FileViewerList {
                 previously_selected_index: None,
                 parent_selected_index: None,
             })
+            .map(|mut viewer| {
+                viewer.focus_first_entry_if_available();
+                viewer
+            })
             .ok()
     }
 
     pub fn do_action(&mut self, action: Action) {
         match action {
-            Action::FileViewerUp => self.previous(),
-            Action::FileViewerDown => self.next(),
+            Action::ViewerUp => self.previous(),
+            Action::ViewerDown => self.next(),
             Action::FileViewerDirUp => self.go_directory_up(),
             Action::FileViewerEnterDir => self.enter_directory(),
             _ => error!("Unsupported file viewer action: {:?}", action),
@@ -48,7 +52,7 @@ impl FileViewerList {
     }
 
     /// Focuses file viewer allowing moving through filesystem and file picking
-    pub fn focus(&mut self) {
+    pub fn toggle_focus(&mut self) {
         match self.state.selected() {
             Some(_) => {
                 self.previously_selected_index = self.state.selected();

@@ -1,18 +1,25 @@
-use super::{metadata::Mp3Metadata, MetadataReader};
-use crate::files::FileEntry;
-use std::time::Duration;
+use crate::{
+    files::FileEntry,
+    player::{metadata::Mp3Metadata, MetadataReader},
+};
+use std::{path::Path, time::Duration};
 
 /// Information about currently selected song in mp3 player
-pub struct SelectedSongFile {
+#[derive(Clone)]
+pub struct SongFile {
     pub metadata: Mp3Metadata,
     pub duration: Duration,
+    pub file_entry: FileEntry,
 }
 
-impl SelectedSongFile {
-    pub fn new(file_entry: &FileEntry, duration: Duration) -> Self {
-        SelectedSongFile {
+impl SongFile {
+    pub fn new(file_entry: &FileEntry) -> Self {
+        let duration =
+            mp3_duration::from_path(Path::new(&file_entry.path)).unwrap_or(Duration::ZERO);
+        SongFile {
             metadata: MetadataReader::read_metadata(file_entry).unwrap(),
             duration,
+            file_entry: file_entry.clone(),
         }
     }
 

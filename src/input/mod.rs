@@ -1,5 +1,5 @@
 //! Module handling key presses in application
 pub mod events;
 
-pub use events::Events;
-pub use events::InputEvent;
+pub use events::AppEvent;
+pub use events::EventBus;

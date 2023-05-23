@@ -3,6 +3,7 @@ use id3::{Tag, TagLike};
 use std::path::Path;
 
 /// Metadata of mp3 file read from ID3 tags
+#[derive(Clone)]
 pub struct Mp3Metadata {
     pub artist: Option<String>,
     pub title: Option<String>,

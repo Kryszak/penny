@@ -1,9 +1,9 @@
 use crate::{
     application::actions::Action,
     external::notifier::{notify_playback_start, notify_playback_stopped},
-    files::FileEntry,
-    player::SelectedSongFile,
+    input::{events::PlaybackEvent::SongFinished, EventBus},
     player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
+    queue::SongFile,
 };
 use log::{debug, error};
 use minimp3::{Decoder, Error, Frame};
@@ -40,33 +40,35 @@ enum PlayerState {
 pub struct Mp3Player {
     /// Miliseconds elapsed since start of playback
     current_playback_ms_elapsed: Arc<Mutex<f64>>,
-    song: Option<SelectedSongFile>,
+    song: Option<SongFile>,
     state: Arc<Mutex<PlayerState>>,
     /// Flag indicating that player should pause playback
     paused: Arc<AtomicBool>,
     /// Flag indicating that player should stop playback
     stop: Arc<AtomicBool>,
-    /// all mp3 frames read from selected file
-    frames: Vec<Frame>,
     /// current frame spectrum analyzed data
     spectrum: Arc<Mutex<Vec<f32>>>,
+    /// struct allowing for sending application events
+    events: Arc<Mutex<EventBus>>,
+    notify_song_end: Arc<AtomicBool>,
 }
 
 impl Mp3Player {
-    pub fn new() -> Self {
+    pub fn new(events: Arc<Mutex<EventBus>>) -> Self {
         Mp3Player {
             song: None,
             state: Arc::new(Mutex::new(PlayerState::New)),
             paused: Arc::new(AtomicBool::new(false)),
             stop: Arc::new(AtomicBool::new(false)),
-            frames: vec![],
             current_playback_ms_elapsed: Arc::new(Mutex::new(0.0)),
             spectrum: Arc::new(Mutex::new(vec![])),
+            events,
+            notify_song_end: Arc::new(AtomicBool::new(true)),
         }
     }
 
     /// Sets provided file as current song in player and starts playback.
-    pub fn set_song_file(&mut self, file_entry: &FileEntry) {
+    pub fn set_song_file(&mut self, song_file: SongFile) {
         //! In case player is currently playing other file, stops it
         {
             match *self.state.lock().unwrap() {
@@ -77,20 +79,26 @@ impl Mp3Player {
             }
             while self.stop.load(Ordering::Relaxed) {}
         }
-        self.frames = Mp3Player::read_mp3_frames(&file_entry.path);
-        self.song = Some(SelectedSongFile::new(file_entry, self.get_track_duration()));
+        self.song = Some(song_file);
         {
             let mut state = self.state.lock().unwrap();
             *state = PlayerState::SongSelected;
         }
-        self.toggle_playback();
     }
 
     pub fn handle_action(&mut self, action: Action) {
         match action {
             Action::TogglePlayback => self.toggle_playback(),
-            Action::StopPlayback => self.stop_playback(),
+            Action::StopPlayback => self.stop_playback(false),
             _ => error!("Action {:?} is not supported for Mp3Player!", action),
+        }
+    }
+
+    /// Returns true if player is currently playing song or in paused state
+    pub fn is_playing(&self) -> bool {
+        match *self.state.lock().unwrap() {
+            PlayerState::Playing | PlayerState::Paused => true,
+            PlayerState::New | PlayerState::SongSelected => false,
         }
     }
 
@@ -145,15 +153,22 @@ impl Mp3Player {
         let paused = self.paused.clone();
         let should_stop = self.stop.clone();
         let player_state = self.state.clone();
-        let frame_duration = self.get_frame_duration() - Duration::from_millis(1);
-        let mut frames_iterator = self.frames.clone().into_iter();
         let playback_progress = self.current_playback_ms_elapsed.clone();
         let spectrum_data = self.spectrum.clone();
+        let event_sender = self.events.clone();
+        let should_notify = self.notify_song_end.clone();
+        let song_path = self
+            .song
+            .as_ref()
+            .map(|s| s.file_entry.path.clone())
+            .unwrap();
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             let mut spectrum_analyzer = SpectrumAnalyzer::new();
+            let mut decoder = Decoder::new(File::open(song_path).unwrap());
+            let mut frame_duration;
             loop {
                 if should_stop.load(Ordering::Relaxed) {
                     break;
@@ -167,15 +182,21 @@ impl Mp3Player {
                         break;
                     }
                 }
-                match frames_iterator.next() {
-                    Some(frame) => {
+                match decoder.next_frame() {
+                    Ok(frame) => {
                         {
                             *spectrum_data.lock().unwrap() = spectrum_analyzer.analyze(&frame.data);
                         }
+                        frame_duration =
+                            Mp3Player::get_frame_duration(&frame) - Duration::from_millis(2);
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }
-                    None => break,
+                    Err(Error::Eof) => break,
+                    Err(e) => {
+                        error!("{:?}", e);
+                        break;
+                    }
                 }
                 std::thread::sleep(frame_duration);
                 {
@@ -187,7 +208,10 @@ impl Mp3Player {
             *playback_progress.lock().unwrap() = 0.0;
             *spectrum_data.lock().unwrap() = vec![];
             debug!("Playback finished.");
-            notify_playback_stopped();
+            if should_notify.load(Ordering::Relaxed) {
+                event_sender.lock().unwrap().send(SongFinished);
+            }
+            should_notify.store(true, Ordering::Relaxed);
             let mut state = player_state.lock().unwrap();
             *state = PlayerState::SongSelected;
         });
@@ -216,46 +240,22 @@ impl Mp3Player {
         }
     }
 
-    fn stop_playback(&mut self) {
+    pub fn stop_playback(&mut self, with_notification: bool) {
+        self.notify_song_end
+            .store(with_notification, Ordering::Relaxed);
         self.stop.store(true, Ordering::Relaxed);
+        if with_notification {
+            notify_playback_stopped();
+        }
     }
 
-    fn get_track_duration(&self) -> Duration {
-        let first_frame = &self.frames[0];
-        let sample_rate = first_frame.sample_rate;
-        let samples_per_frame = first_frame.data.len() / first_frame.channels;
-        let duration = (samples_per_frame as i32 * self.frames.len() as i32) / sample_rate;
-
-        Duration::from_secs(duration.try_into().unwrap())
-    }
-
-    fn get_frame_duration(&self) -> Duration {
-        let first_frame = &self.frames[0];
-        let frame_duration = (first_frame.data.len() as f64 / first_frame.channels as f64)
-            / first_frame.sample_rate as f64;
+    fn get_frame_duration(frame: &Frame) -> Duration {
+        let frame_duration =
+            (frame.data.len() as f64 / frame.channels as f64) / frame.sample_rate as f64;
         Duration::from_millis((frame_duration * 1024.0) as u64)
     }
 
     fn get_song_elapsed_seconds(&self) -> f64 {
         *self.current_playback_ms_elapsed.lock().unwrap() / 1000.0
-    }
-
-    fn read_mp3_frames(file_path: &str) -> Vec<Frame> {
-        let mut decoder = Decoder::new(File::open(file_path).unwrap());
-        let mut frames: Vec<Frame> = vec![];
-        loop {
-            match decoder.next_frame() {
-                Ok(frame) => {
-                    frames.push(frame);
-                }
-                Err(Error::Eof) => break,
-                Err(e) => {
-                    error!("{:?}", e);
-                    break;
-                }
-            }
-        }
-
-        frames
     }
 }
