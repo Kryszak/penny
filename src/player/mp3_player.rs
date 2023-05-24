@@ -2,11 +2,11 @@ use crate::{
     application::actions::Action,
     external::notifier::{notify_playback_start, notify_playback_stopped},
     input::{events::PlaybackEvent::SongFinished, EventBus},
-    player::{spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
+    player::{frame_decoder::FrameDuration, spectrum_analyzer::SpectrumAnalyzer, FrameDecoder},
     queue::SongFile,
 };
 use log::{debug, error};
-use minimp3::{Decoder, Error, Frame};
+use minimp3::{Decoder, Error};
 use rodio::{OutputStream, Sink};
 use std::{
     f64,
@@ -72,9 +72,7 @@ impl Mp3Player {
     /// Sets provided file as current song in player and starts playback.
     pub fn set_song_file(&mut self, song_file: SongFile) {
         //! In case player is currently playing other file, stops it
-        if self.is_playing() {
-            self.stop_playback(false);
-        }
+        self.stop_playback(false);
         self.song = Some(song_file);
         *self.state.lock().unwrap() = PlayerState::SongSelected;
     }
@@ -151,18 +149,12 @@ impl Mp3Player {
         let spectrum_data = self.spectrum.clone();
         let event_sender = self.events.clone();
         let should_notify = self.notify_song_end.clone();
-        let song_path = self
-            .song
-            .as_ref()
-            .map(|s| s.file_entry.path.clone())
-            .unwrap();
+        let mut decoder = self.get_file_decoder();
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
             let (_stream, stream_handle) = OutputStream::try_default().unwrap();
             let sink = Sink::try_new(&stream_handle).unwrap();
             let mut spectrum_analyzer = SpectrumAnalyzer::new();
-            let mut decoder = Decoder::new(File::open(song_path).unwrap());
-            let mut frame_duration;
             loop {
                 if should_stop.load(Ordering::Relaxed) {
                     break;
@@ -176,13 +168,13 @@ impl Mp3Player {
                         break;
                     }
                 }
+                let frame_duration;
                 match decoder.next_frame() {
                     Ok(frame) => {
                         {
                             *spectrum_data.lock().unwrap() = spectrum_analyzer.analyze(&frame.data);
                         }
-                        frame_duration =
-                            Mp3Player::get_frame_duration(&frame) - Duration::from_millis(2);
+                        frame_duration = frame.get_duration() - Duration::from_millis(2);
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }
@@ -240,6 +232,9 @@ impl Mp3Player {
     }
 
     pub fn stop_playback(&mut self, with_notification: bool) {
+        if !self.is_playing() {
+            return;
+        }
         self.notify_song_end
             .store(with_notification, Ordering::Relaxed);
         self.stop.store(true, Ordering::Relaxed);
@@ -249,10 +244,13 @@ impl Mp3Player {
         }
     }
 
-    fn get_frame_duration(frame: &Frame) -> Duration {
-        let frame_duration =
-            (frame.data.len() as f64 / frame.channels as f64) / frame.sample_rate as f64;
-        Duration::from_millis((frame_duration * 1024.0) as u64)
+    fn get_file_decoder(&self) -> Decoder<File> {
+        let song_path = self
+            .song
+            .as_ref()
+            .map(|s| s.file_entry.path.clone())
+            .unwrap();
+        Decoder::new(File::open(song_path).unwrap())
     }
 
     fn get_song_elapsed_seconds(&self) -> f64 {

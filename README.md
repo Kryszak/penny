@@ -4,7 +4,7 @@
 # Penny
 Linux Tui MP3 player
 
-This project was created as a personal goal to improve my Rust skills. For now, there are no plans for any heavy work on new features or improvements. 
+This project was created as a personal goal to improve my Rust skills. 
 
 ## Why Penny?
 Inspiration for the name comes from the [character](https://bulbapedia.bulbagarden.net/wiki/Penny) which battle theme is good and feels misplaced in the same time. 

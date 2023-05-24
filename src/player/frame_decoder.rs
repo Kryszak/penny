@@ -56,3 +56,15 @@ impl Iterator for FrameDecoder {
         Some(v)
     }
 }
+
+pub trait FrameDuration {
+    fn get_duration(&self) -> Duration;
+}
+
+impl FrameDuration for Frame {
+    fn get_duration(&self) -> Duration {
+        let frame_duration =
+            (self.data.len() as f64 / self.channels as f64) / self.sample_rate as f64;
+        Duration::from_millis((frame_duration * 1024.0) as u64)
+    }
+}
