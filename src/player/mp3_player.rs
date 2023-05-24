@@ -72,9 +72,7 @@ impl Mp3Player {
     /// Sets provided file as current song in player and starts playback.
     pub fn set_song_file(&mut self, song_file: SongFile) {
         //! In case player is currently playing other file, stops it
-        if self.is_playing() {
-            self.stop_playback(false);
-        }
+        self.stop_playback(false);
         self.song = Some(song_file);
         *self.state.lock().unwrap() = PlayerState::SongSelected;
     }
@@ -240,6 +238,9 @@ impl Mp3Player {
     }
 
     pub fn stop_playback(&mut self, with_notification: bool) {
+        if !self.is_playing() {
+            return;
+        }
         self.notify_song_end
             .store(with_notification, Ordering::Relaxed);
         self.stop.store(true, Ordering::Relaxed);

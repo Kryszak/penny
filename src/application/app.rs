@@ -20,6 +20,7 @@ pub struct AppState {
     pub band_count: usize,
 }
 
+/// Types of visualization style available in app
 pub enum VisualizationStyle {
     Bar { data: BarChartData },
     Chart { data: ChartData },
@@ -71,60 +72,78 @@ impl App {
             Action::Quit => return AppActionResult::Exit,
             Action::ToggleHelp => self.state.help_visible = !self.state.help_visible,
             Action::ToggleLogs => self.state.logs_visible = !self.state.logs_visible,
-            Action::ChangeViewFocus => {
-                self.state.file_viewer_focused = !self.state.file_viewer_focused;
-                self.file_list.toggle_focus();
-                self.queue_view.toggle_focus();
-            }
-            Action::ViewerUp | Action::ViewerDown => match self.state.file_viewer_focused {
-                true => self.file_list.do_action(action),
-                false => self.queue_view.do_action(action),
-            },
+            Action::ChangeViewFocus => self.handle_lists_focus_change(),
+            Action::ViewerUp | Action::ViewerDown => self.handle_list_item_change(action),
             Action::FileViewerDirUp | Action::FileViewerEnterDir => {
-                if self.state.file_viewer_focused {
-                    self.file_list.do_action(action);
-                }
+                self.handle_file_list_directory_change(action)
             }
-            Action::Select => match self.state.file_viewer_focused {
-                true => {
-                    if let Some(file_entry) = self.file_list.get_selected_file_entry() {
-                        if file_entry.is_file {
-                            self.queue_view.add(file_entry);
-                            if self.queue_view.items.len() == 1 {
-                                self.queue_view.do_action(Action::ViewerDown);
-                                self.player.set_song_file(
-                                    self.queue_view.get_selected_file_entry().unwrap().clone(),
-                                );
-                                self.player.handle_action(Action::TogglePlayback);
-                            }
-                        }
-                    }
-                }
-                false => {
-                    if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
-                        self.player.set_song_file(selected_song.clone());
-                        self.player.handle_action(Action::TogglePlayback);
-                    }
-                }
-            },
+            Action::Select => self.handle_list_item_select(),
             Action::TogglePlayback | Action::StopPlayback => {
                 self.player.handle_action(action);
             }
             Action::ChangeVisualization => self.change_visualization_style(),
             Action::ChangeColor => self.change_color(),
             Action::OnSongFinished => self.handle_song_finished(),
-            Action::DeleteFromQueue => {
-                if !self.state.file_viewer_focused {
-                    self.queue_view.do_action(action);
-                    if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
-                        self.player.set_song_file(selected_song.clone());
-                    }
-                    self.player.handle_action(Action::TogglePlayback);
-                }
-            }
+            Action::DeleteFromQueue => self.handle_delete_from_queue(action),
         };
 
         AppActionResult::Continue
+    }
+
+    fn handle_lists_focus_change(&mut self) {
+        self.state.file_viewer_focused = !self.state.file_viewer_focused;
+        self.file_list.toggle_focus();
+        self.queue_view.toggle_focus();
+    }
+
+    fn handle_list_item_change(&mut self, action: Action) {
+        match self.state.file_viewer_focused {
+            true => self.file_list.do_action(action),
+            false => self.queue_view.do_action(action),
+        }
+    }
+
+    fn handle_file_list_directory_change(&mut self, action: Action) {
+        if self.state.file_viewer_focused {
+            self.file_list.do_action(action);
+        }
+    }
+
+    fn handle_list_item_select(&mut self) {
+        match self.state.file_viewer_focused {
+            true => {
+                if let Some(file_entry) = self.file_list.get_selected_file_entry() {
+                    if !file_entry.is_file {
+                        return;
+                    }
+                    self.queue_view.add(file_entry);
+                    if self.queue_view.items.len() > 1 {
+                        return;
+                    }
+                    self.queue_view.do_action(Action::ViewerDown);
+                    self.player
+                        .set_song_file(self.queue_view.get_selected_file_entry().unwrap().clone());
+                    self.player.handle_action(Action::TogglePlayback);
+                }
+            }
+            false => {
+                if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
+                    self.player.set_song_file(selected_song.clone());
+                    self.player.handle_action(Action::TogglePlayback);
+                }
+            }
+        }
+    }
+
+    fn handle_delete_from_queue(&mut self, action: Action) {
+        if self.state.file_viewer_focused {
+            return;
+        }
+        self.queue_view.do_action(action);
+        if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
+            self.player.set_song_file(selected_song.clone());
+            self.player.handle_action(Action::TogglePlayback);
+        }
     }
 
     fn handle_song_finished(&mut self) {
