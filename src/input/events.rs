@@ -55,22 +55,8 @@ impl EventBus {
 
         let event_stop_capture = stop_capture.clone();
         let loop_tx = tx.clone();
-        thread::spawn(move || {
-            loop {
-                // poll for tick rate duration, if no event, sent tick event.
-                if crossterm::event::poll(tick_rate).unwrap() {
-                    if let event::Event::Key(key_event) = event::read().unwrap() {
-                        loop_tx
-                            .send(AppEvent::Input(KeyPress::new(key_event)))
-                            .unwrap();
-                    }
-                }
-                loop_tx.send(AppEvent::Tick).unwrap();
-                if event_stop_capture.load(Ordering::Relaxed) {
-                    break;
-                }
-            }
-        });
+
+        thread::spawn(move || Self::poll_key_events(tick_rate, loop_tx, event_stop_capture));
 
         EventBus {
             tx,
@@ -79,6 +65,7 @@ impl EventBus {
         }
     }
 
+    /// Alows to send event in application
     pub fn send(&mut self, event: PlaybackEvent) {
         self.tx.send(AppEvent::Playback(event)).unwrap();
     }
@@ -91,5 +78,20 @@ impl EventBus {
     /// Stops keypress capture thread
     pub fn close(&mut self) {
         self.stop_capture.store(true, Ordering::Relaxed)
+    }
+
+    fn poll_key_events(tick_rate: Duration, tx: Sender<AppEvent>, stop_capture: Arc<AtomicBool>) {
+        loop {
+            // poll for tick rate duration, if no event, sent tick event.
+            if crossterm::event::poll(tick_rate).unwrap() {
+                if let event::Event::Key(key_event) = event::read().unwrap() {
+                    tx.send(AppEvent::Input(KeyPress::new(key_event))).unwrap();
+                }
+            }
+            tx.send(AppEvent::Tick).unwrap();
+            if stop_capture.load(Ordering::Relaxed) {
+                break;
+            }
+        }
     }
 }

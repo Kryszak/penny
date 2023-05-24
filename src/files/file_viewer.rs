@@ -95,20 +95,21 @@ impl FileViewerList {
         let maybe_selected_entry = self.state.selected().map(|i| &self.items[i]);
 
         if let Some(entry) = maybe_selected_entry {
-            if Path::new(&entry.path).is_dir() {
-                match FileViewerList::list_directory_content(&entry.path) {
-                    Ok(items) => {
-                        self.parent_selected_index = self.state.selected();
-                        self.current_directory = entry.path.clone();
-                        self.items = items;
-                        self.focus_first_entry_if_available();
-                    }
-                    Err(_) => error!(
-                        "Missing permission to list files in directory {}!",
-                        entry.path
-                    ),
-                };
+            if Path::new(&entry.path).is_file() {
+                return;
             }
+            match FileViewerList::list_directory_content(&entry.path) {
+                Ok(items) => {
+                    self.parent_selected_index = self.state.selected();
+                    self.current_directory = entry.path.clone();
+                    self.items = items;
+                    self.focus_first_entry_if_available();
+                }
+                Err(_) => error!(
+                    "Missing permission to list files in directory {}!",
+                    entry.path
+                ),
+            };
         };
     }
 
