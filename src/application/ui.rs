@@ -1,15 +1,17 @@
 use super::{app::VisualizationStyle, App};
 use crate::queue::SongFile;
 use crate::{files::FileEntry, player::Mp3Player};
+use ratatui::style::Style;
+use ratatui::widgets::Block;
 use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
-    style::{Color, Modifier, Style},
+    style::{Color, Modifier},
     symbols,
-    text::{Span, Spans},
+    text::{Line, Span},
     widgets::{
-        Axis, BarChart, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, List,
-        ListItem, Paragraph,
+        Axis, BarChart, BorderType, Borders, Chart, Dataset, Gauge, GraphType, List, ListItem,
+        Paragraph,
     },
     Frame,
 };
@@ -102,7 +104,7 @@ fn draw_file_list<'a>(
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
-            ListItem::new(Spans::from(Span::styled(&x.name, Style::default())))
+            ListItem::new(Line::from(Span::styled(&x.name, Style::default())))
                 .style(Style::default().remove_modifier(Modifier::BOLD))
         })
         .collect();
@@ -131,7 +133,7 @@ fn draw_queue_list<'a>(
     let items: Vec<ListItem> = files
         .iter()
         .map(|x| {
-            ListItem::new(Spans::from(Span::styled(
+            ListItem::new(Line::from(Span::styled(
                 x.display_short(),
                 Style::default(),
             )))
@@ -201,10 +203,10 @@ fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
 }
 
 fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
-    let lines: Vec<Spans> = player
+    let lines: Vec<Line> = player
         .display_information()
         .into_iter()
-        .map(Spans::from)
+        .map(Line::from)
         .collect();
     Paragraph::new(lines)
         .block(Block::default())
@@ -272,51 +274,51 @@ fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) 
 
 fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
     let mut help_text = vec![
-        Spans::from("h: Toogle help"),
-        Spans::from("f: Focus files/queue"),
-        Spans::from("v: Change visualization style"),
-        Spans::from("q: Quit"),
+        Line::from("h: Toogle help"),
+        Line::from("f: Focus files/queue"),
+        Line::from("v: Change visualization style"),
+        Line::from("q: Quit"),
     ];
 
     let mut player_help = vec![
-        Spans::from(""),
-        Spans::from(Span::styled(
+        Line::from(""),
+        Line::from(Span::styled(
             "Player",
             Style::default().add_modifier(Modifier::BOLD),
         )),
-        Spans::from("p: Play/Pause"),
-        Spans::from("s: Stop"),
+        Line::from("p: Play/Pause"),
+        Line::from("s: Stop"),
     ];
 
     help_text.append(&mut player_help);
 
     if !show_file_viewer_help {
         let mut queue_view_help_test = vec![
-            Spans::from(""),
-            Spans::from(Span::styled(
+            Line::from(""),
+            Line::from(Span::styled(
                 "Playback queue",
                 Style::default().add_modifier(Modifier::BOLD),
             )),
-            Spans::from("\u{23CE}: Play song"),
-            Spans::from("\u{2191}: Select song up"),
-            Spans::from("\u{2193}: Select song down"),
-            Spans::from("d: Remove song"),
+            Line::from("\u{23CE}: Play song"),
+            Line::from("\u{2191}: Select song up"),
+            Line::from("\u{2193}: Select song down"),
+            Line::from("d: Remove song"),
         ];
         help_text.append(&mut queue_view_help_test);
     }
 
     if show_file_viewer_help {
         let mut file_viewer_help_text = vec![
-            Spans::from(""),
-            Spans::from(Span::styled(
+            Line::from(""),
+            Line::from(Span::styled(
                 "File viewer",
                 Style::default().add_modifier(Modifier::BOLD),
             )),
-            Spans::from("\u{23CE}: Add to queue"),
-            Spans::from("\u{2190}: Directory up"),
-            Spans::from("\u{2192}: Enter directory"),
-            Spans::from("\u{2191}: Select file up"),
-            Spans::from("\u{2193}: Select file down"),
+            Line::from("\u{23CE}: Add to queue"),
+            Line::from("\u{2190}: Directory up"),
+            Line::from("\u{2192}: Enter directory"),
+            Line::from("\u{2191}: Select file up"),
+            Line::from("\u{2193}: Select file down"),
         ];
         help_text.append(&mut file_viewer_help_text);
     }
