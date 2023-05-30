@@ -4,7 +4,7 @@ version = "0.0.1"
 edition = "2021"
 
 [dependencies]
-ratatui = "0.21.0"
+tui = { version = "0.21.0", package = "ratatui" }
 crossterm = "0.26"
 tui-logger = { version = "0.9.1", features = [
     "ratatui-support",

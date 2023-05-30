@@ -15,11 +15,11 @@ use crossterm::{
     ExecutableCommand,
 };
 use log::{info, LevelFilter};
-use ratatui::{backend::CrosstermBackend, Terminal};
 use std::{
     io,
     sync::{Arc, Mutex},
 };
+use tui::{backend::CrosstermBackend, Terminal};
 
 /// Application runner handling terminal setup as well as managing app lifetime
 pub fn run_app(app: &mut App, events: Arc<Mutex<EventBus>>) -> io::Result<()> {

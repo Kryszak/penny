@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use events::EventBus;
 use log::{info, LevelFilter};
-use ratatui::style::Color;
+use tui::style::Color;
 
 use super::visualization_state::BarChartData;
 use super::{actions::Action, visualization_state::ChartData};
@@ -57,7 +57,7 @@ impl App {
                 visualization_style: VisualizationStyle::Bar {
                     data: BarChartData::new(config.band_count),
                 },
-                color_style: config.color.to_ratatui_color(),
+                color_style: config.color.to_tui_color(),
                 band_count: config.band_count,
             },
             file_list,
