@@ -1,5 +1,5 @@
 use log::{error, trace};
-use ratatui::widgets::ListState;
+use tui::widgets::ListState;
 
 use crate::{application::actions::Action, files::FileEntry, queue::SongFile};
 
