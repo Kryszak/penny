@@ -85,6 +85,9 @@ impl App {
             Action::ChangeColor => self.change_color(),
             Action::OnSongFinished => self.handle_song_finished(),
             Action::DeleteFromQueue => self.handle_delete_from_queue(action),
+            Action::PlayNextFromQueue | Action::PlayPreviousFromQueue => {
+                self.handle_play_from_queue(action)
+            }
         };
 
         AppActionResult::Continue
@@ -145,6 +148,11 @@ impl App {
     fn handle_song_finished(&mut self) {
         info!("Playing next song from queue...");
         self.queue_view.do_action(Action::ViewerDown);
+        self.update_currently_playing();
+    }
+
+    fn handle_play_from_queue(&mut self, action: Action) {
+        self.queue_view.do_action(action);
         self.update_currently_playing();
     }
 

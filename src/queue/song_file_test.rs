@@ -43,10 +43,7 @@ mod tests {
         // then
         assert_eq!(
             result.display(),
-            vec![format!(
-                "Title : {}",
-                dummy_mp3_file_path.to_string_lossy()
-            )]
+            vec![format!("Title : {}", dummy_mp3_file_path.to_string_lossy())]
         );
 
         Ok(())

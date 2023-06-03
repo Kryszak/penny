@@ -19,6 +19,8 @@ pub enum Action {
     ChangeColor,
     OnSongFinished,
     DeleteFromQueue,
+    PlayNextFromQueue,
+    PlayPreviousFromQueue,
 }
 
 /// Translator for keypresses to actions inside of app
@@ -42,6 +44,8 @@ impl Actions {
             KeyCode::Char('s') => Some(Action::StopPlayback),
             KeyCode::Char('v') => Some(Action::ChangeVisualization),
             KeyCode::Char('c') => Some(Action::ChangeColor),
+            KeyCode::Char('j') => Some(Action::PlayPreviousFromQueue),
+            KeyCode::Char('k') => Some(Action::PlayNextFromQueue),
             _ => None,
         }
     }

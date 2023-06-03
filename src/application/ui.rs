@@ -139,13 +139,13 @@ fn draw_queue_list<'a>(
             if let Some(i) = now_playing {
                 if i == index {
                     return ListItem::new(Line::from(Span::styled(
-                        format!("\u{23F5} {}", x.display_short()),
+                        format!("\u{25B6} {}", x.display_short()),
                         Style::default(),
                     )));
                 }
             }
             ListItem::new(Line::from(Span::styled(
-                x.display_short(),
+                format!("  {}", x.display_short()),
                 Style::default(),
             )))
             .style(Style::default().remove_modifier(Modifier::BOLD))
@@ -297,8 +297,10 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
             "Player",
             Style::default().add_modifier(Modifier::BOLD),
         )),
-        Line::from("p: Play/Pause"),
+        Line::from("p: Toggle playback"),
         Line::from("s: Stop"),
+        Line::from("j: Play previous"),
+        Line::from("k: Play next"),
     ];
 
     help_text.append(&mut player_help);
