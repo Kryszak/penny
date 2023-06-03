@@ -121,16 +121,11 @@ impl App {
                         return;
                     }
                     self.queue_view.do_action(Action::ViewerDown);
-                    self.player
-                        .set_song_file(self.queue_view.get_selected_file_entry().unwrap().clone());
-                    self.player.handle_action(Action::TogglePlayback);
+                    self.update_currently_playing();
                 }
             }
             false => {
-                if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
-                    self.player.set_song_file(selected_song.clone());
-                    self.player.handle_action(Action::TogglePlayback);
-                }
+                self.update_currently_playing();
             }
         }
     }
@@ -139,18 +134,24 @@ impl App {
         if self.state.file_viewer_focused {
             return;
         }
+        let currently_playing = self.queue_view.now_playing;
+        let removed_index = self.queue_view.state.selected();
         self.queue_view.do_action(action);
-        if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
-            self.player.set_song_file(selected_song.clone());
-            self.player.handle_action(Action::TogglePlayback);
+        if currently_playing == removed_index {
+            self.update_currently_playing();
         }
     }
 
     fn handle_song_finished(&mut self) {
         info!("Playing next song from queue...");
         self.queue_view.do_action(Action::ViewerDown);
+        self.update_currently_playing();
+    }
+
+    fn update_currently_playing(&mut self) {
         if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
             self.player.set_song_file(selected_song.clone());
+            self.queue_view.now_playing = self.queue_view.state.selected();
             self.player.handle_action(Action::TogglePlayback);
         }
     }

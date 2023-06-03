@@ -12,7 +12,7 @@ mod tests {
         // given
         let tmp_dir = TempDir::new("metadata_with_tag")?;
         let dummy_mp3_file_path = tmp_dir.path().join("song_2.mp3");
-        prepare_dummy_mp3(&dummy_mp3_file_path.to_string_lossy().to_string())?;
+        prepare_dummy_mp3(&dummy_mp3_file_path.to_string_lossy())?;
         let file_entry = FileEntry::new(&dummy_mp3_file_path);
 
         // when
@@ -45,7 +45,7 @@ mod tests {
             result.display(),
             vec![format!(
                 "Title : {}",
-                dummy_mp3_file_path.to_string_lossy().to_string()
+                dummy_mp3_file_path.to_string_lossy()
             )]
         );
 

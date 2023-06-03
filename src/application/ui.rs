@@ -81,6 +81,7 @@ fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
         draw_queue_list(
             "Queue",
             &app.queue_view.items,
+            app.queue_view.now_playing,
             app.state.color_style,
             !app.state.file_viewer_focused,
         ),
@@ -126,13 +127,23 @@ fn draw_file_list<'a>(
 
 fn draw_queue_list<'a>(
     title_path: &'a str,
-    files: &'a [SongFile],
+    items: &'a [SongFile],
+    now_playing: Option<usize>,
     color: Color,
     focused: bool,
 ) -> List<'a> {
-    let items: Vec<ListItem> = files
+    let items: Vec<ListItem> = items
         .iter()
-        .map(|x| {
+        .enumerate()
+        .map(|(index, x)| {
+            if let Some(i) = now_playing {
+                if i == index {
+                    return ListItem::new(Line::from(Span::styled(
+                        format!("\u{23F5} {}", x.display_short()),
+                        Style::default(),
+                    )));
+                }
+            }
             ListItem::new(Line::from(Span::styled(
                 x.display_short(),
                 Style::default(),

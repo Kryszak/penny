@@ -6,6 +6,7 @@ use crate::{application::actions::Action, files::FileEntry, queue::SongFile};
 pub struct QueueView {
     pub state: ListState,
     pub items: Vec<SongFile>,
+    pub now_playing: Option<usize>,
 }
 
 impl QueueView {
@@ -13,6 +14,7 @@ impl QueueView {
         QueueView {
             state: ListState::default(),
             items: vec![],
+            now_playing: None,
         }
     }
 
@@ -20,21 +22,21 @@ impl QueueView {
         match action {
             Action::ViewerUp => self.previous(),
             Action::ViewerDown => self.next(),
-            Action::DeleteFromQueue => self.remove_current(),
+            Action::DeleteFromQueue => self.remove_selected(),
             _ => error!("Unsupported queue viewer action: {:?}", action),
         }
     }
 
     pub fn toggle_focus(&mut self) {
-        match self.state.selected() {
-            Some(_) => {
+        match self.now_playing {
+            Some(index) => {
+                self.state.select(Some(index));
                 trace!("Queue viewer lost focus");
             }
             None => {
-                self.focus_first_entry_if_available();
                 trace!("Queue viewer received focus");
             }
-        };
+        }
     }
 
     pub fn add(&mut self, file_entry: &FileEntry) {
@@ -73,7 +75,11 @@ impl QueueView {
         }
     }
 
-    fn remove_current(&mut self) {
+    fn remove_selected(&mut self) {
+        let adjust_now_playing = match (self.now_playing, self.state.selected()) {
+            (Some(now_playing_index), Some(selected_index)) => now_playing_index > selected_index,
+            (None, None) | (None, Some(_)) | (Some(_), None) => false,
+        };
         if let Some(index) = self.state.selected() {
             self.items.remove(index);
             if !self.items.is_empty() && self.items.len() > index {
@@ -81,6 +87,17 @@ impl QueueView {
             } else {
                 self.focus_first_entry_if_available();
             }
+        }
+        if !adjust_now_playing {
+            return;
+        }
+        if let Some(index) = self.now_playing {
+            let adjusted_now_playing_index = if index == 0 {
+                self.items.len() - 1
+            } else {
+                index - 1
+            };
+            self.now_playing = Some(adjusted_now_playing_index);
         }
     }
 
