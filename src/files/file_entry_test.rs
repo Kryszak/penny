@@ -15,6 +15,6 @@ mod tests {
         // then
         assert_eq!(result.path, "src/files/file_entry_test.rs");
         assert_eq!(result.name, "file_entry_test.rs");
-        assert_eq!(result.is_file, true);
+        assert!(result.is_file);
     }
 }

@@ -12,7 +12,7 @@ mod tests {
         // given
         let tmp_dir = TempDir::new("metadata")?;
         let dummy_mp3_file_path = tmp_dir.path().join("song.mp3");
-        prepare_dummy_mp3(&dummy_mp3_file_path.to_string_lossy().to_string())?;
+        prepare_dummy_mp3(&dummy_mp3_file_path.to_string_lossy())?;
         let file_entry = FileEntry::new(&dummy_mp3_file_path);
 
         // when
