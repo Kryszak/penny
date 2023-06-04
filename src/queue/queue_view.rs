@@ -91,6 +91,10 @@ impl QueueView {
         self.state.selected().map(|i| &self.items[i])
     }
 
+    pub fn get_now_playing_entry(&self) -> Option<&SongFile> {
+        self.now_playing.map(|i| &self.items[i])
+    }
+
     fn update_now_playing(&mut self, direction: UpdateDirection) {
         if let Some(index) = self.now_playing {
             match direction {

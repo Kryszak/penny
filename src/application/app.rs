@@ -124,11 +124,11 @@ impl App {
                         return;
                     }
                     self.queue_view.do_action(Action::ViewerDown);
-                    self.update_currently_playing();
+                    self.update_currently_playing_from_selection();
                 }
             }
             false => {
-                self.update_currently_playing();
+                self.update_currently_playing_from_selection();
             }
         }
     }
@@ -141,13 +141,13 @@ impl App {
         let removed_index = self.queue_view.state.selected();
         self.queue_view.do_action(action);
         if currently_playing == removed_index {
-            self.update_currently_playing();
+            self.update_currently_playing_from_selection();
         }
     }
 
     fn handle_song_finished(&mut self) {
         info!("Playing next song from queue...");
-        self.queue_view.do_action(Action::ViewerDown);
+        self.queue_view.do_action(Action::PlayNextFromQueue);
         self.update_currently_playing();
     }
 
@@ -156,10 +156,17 @@ impl App {
         self.update_currently_playing();
     }
 
-    fn update_currently_playing(&mut self) {
+    fn update_currently_playing_from_selection(&mut self) {
         if let Some(selected_song) = self.queue_view.get_selected_file_entry() {
             self.player.set_song_file(selected_song.clone());
             self.queue_view.now_playing = self.queue_view.state.selected();
+            self.player.handle_action(Action::TogglePlayback);
+        }
+    }
+
+    fn update_currently_playing(&mut self) {
+        if let Some(selected_song) = self.queue_view.get_now_playing_entry() {
+            self.player.set_song_file(selected_song.clone());
             self.player.handle_action(Action::TogglePlayback);
         }
     }
@@ -183,9 +190,9 @@ impl App {
         match &self.state.color_style {
             Color::Cyan => self.state.color_style = Color::Red,
             Color::Red => self.state.color_style = Color::Magenta,
-            Color::Magenta => self.state.color_style = Color::Green,
-            Color::Green => self.state.color_style = Color::Blue,
-            Color::Blue => self.state.color_style = Color::Cyan,
+            Color::Magenta => self.state.color_style = Color::Blue,
+            Color::Blue => self.state.color_style = Color::Green,
+            Color::Green => self.state.color_style = Color::Cyan,
             Color::Indexed(_)
             | Color::Rgb(_, _, _)
             | Color::White
