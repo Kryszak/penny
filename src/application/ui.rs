@@ -1,10 +1,9 @@
 use super::{app::VisualizationStyle, App};
 use crate::queue::SongFile;
 use crate::{files::FileEntry, player::Mp3Player};
-use std::vec;
-use tui::style::Style;
-use tui::widgets::Block;
-use tui::{
+use ratatui::style::Style;
+use ratatui::widgets::Block;
+use ratatui::{
     backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier},
@@ -16,6 +15,7 @@ use tui::{
     },
     Frame,
 };
+use std::vec;
 use tui_logger::TuiLoggerWidget;
 
 /// Render UI based on application state

@@ -1,6 +1,6 @@
 use clap::{Parser, ValueEnum};
+use ratatui::style::Color;
 use std::env::var;
-use tui::style::Color;
 
 #[derive(Clone, Debug, ValueEnum)]
 pub enum ParsedColor {
@@ -12,7 +12,7 @@ pub enum ParsedColor {
 }
 
 impl ParsedColor {
-    pub fn to_tui_color(&self) -> Color {
+    pub fn to_ratatui_color(&self) -> Color {
         match self {
             ParsedColor::Cyan => Color::Cyan,
             ParsedColor::Red => Color::Red,
