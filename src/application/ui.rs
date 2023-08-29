@@ -39,7 +39,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
 
 fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
     let help_constraint = match app.state.help_visible {
-        true => Constraint::Max(25),
+        true => Constraint::Max(35),
         false => Constraint::Length(0),
     };
 
@@ -288,6 +288,7 @@ fn draw_help_panel<'a>(show_file_viewer_help: bool) -> Paragraph<'a> {
         Line::from("h: Toogle help"),
         Line::from("f: Focus files/queue"),
         Line::from("v: Change visualization style"),
+        Line::from("c: Change player color"),
         Line::from("q: Quit"),
     ];
 
