@@ -5,6 +5,7 @@ use crate::{
         AppActionResult::Exit,
     },
     input::{AppEvent, EventBus},
+    logger::logger_widget,
 };
 use crossterm::{
     event::DisableMouseCapture,
@@ -26,8 +27,8 @@ pub fn run_app(app: &mut App, events: Arc<Mutex<EventBus>>) -> io::Result<()> {
     let stdout = io::stdout();
     enable_raw_mode()?;
 
-    tui_logger::init_logger(LevelFilter::Trace).unwrap();
-    tui_logger::set_default_level(app.state.log_level);
+    logger_widget::init_logger(LevelFilter::Trace).unwrap();
+    logger_widget::set_default_level(app.state.log_level);
 
     let mut backend = CrosstermBackend::new(stdout);
     backend.execute(SetTitle("penny"))?;

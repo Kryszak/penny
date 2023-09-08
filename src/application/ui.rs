@@ -1,4 +1,5 @@
 use super::{app::VisualizationStyle, App};
+use crate::logger::logger_widget::TuiLoggerWidget;
 use crate::queue::SongFile;
 use crate::{files::FileEntry, player::Mp3Player};
 use ratatui::style::Style;
@@ -16,7 +17,6 @@ use ratatui::{
     Frame,
 };
 use std::vec;
-use tui_logger::TuiLoggerWidget;
 
 /// Render UI based on application state
 pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
@@ -380,11 +380,6 @@ fn draw_log_view<'a>() -> TuiLoggerWidget<'a> {
                 .borders(Borders::ALL)
                 .style(Style::default().add_modifier(Modifier::BOLD)),
         )
-        .output_level(None)
         .style(Style::default())
-        .output_target(false)
-        .output_line(false)
-        .output_file(false)
-        .output_timestamp(None)
         .output_separator(' ')
 }
