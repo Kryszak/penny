@@ -5,7 +5,6 @@ use crate::{files::FileEntry, player::Mp3Player};
 use ratatui::style::Style;
 use ratatui::widgets::Block;
 use ratatui::{
-    backend::Backend,
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier},
     symbols,
@@ -19,7 +18,7 @@ use ratatui::{
 use std::vec;
 
 /// Render UI based on application state
-pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
+pub fn ui(f: &mut Frame, app: &mut App) {
     let main_view_constraint = Constraint::Max(60);
     let now_playing_view_constraint = Constraint::Percentage(40);
 
@@ -37,7 +36,7 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App) {
     draw_player_panel(f, app, player_area);
 }
 
-fn render_main_view<B: Backend>(f: &mut Frame<B>, area: Rect, app: &mut App) {
+fn render_main_view(f: &mut Frame, area: Rect, app: &mut App) {
     let help_constraint = match app.state.help_visible {
         true => Constraint::Max(35),
         false => Constraint::Length(0),
@@ -174,7 +173,7 @@ fn get_border_style(focused: bool, accent_color: Color) -> (BorderType, Color) {
     }
 }
 
-fn draw_player_panel<B: Backend>(f: &mut Frame<B>, app: &mut App, area: Rect) {
+fn draw_player_panel(f: &mut Frame, app: &mut App, area: Rect) {
     let view = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -240,7 +239,7 @@ fn draw_song_progress(player: &Mp3Player, color: Color) -> Gauge {
         ))
 }
 
-fn draw_audio_spectrum<B: Backend>(f: &mut Frame<B>, app: &mut App, rect: Rect) {
+fn draw_audio_spectrum(f: &mut Frame, app: &mut App, rect: Rect) {
     match app.state.visualization_style {
         VisualizationStyle::Bar { ref mut data } => {
             let unsigned_spectrum: Vec<u64> = app
