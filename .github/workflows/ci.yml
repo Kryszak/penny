@@ -20,12 +20,6 @@ jobs:
           packages: libasound2-dev
           version: 1.0
       - name: Prepare rust toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          components: clippy
-          override: true
-      - name: Prepare rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Run tests
         run: cargo test
