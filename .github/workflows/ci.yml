@@ -25,18 +25,11 @@ jobs:
           toolchain: stable
           components: clippy
           override: true
-      - name: Prepare cache
-        uses: Swatinem/rust-cache@v2
+      - name: Prepare rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
       - name: Run tests
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
+        run: cargo test
       - name: Build app
-        uses: actions-rs/cargo@v1
-        with:
-          command: build
+        run: cargo build
       - name: Check with Clippy
-        uses: actions-rs/cargo@v1
-        with:
-          command: clippy
-          args: -- -D warnings
+        run: cargo clippy -- -D warnings
