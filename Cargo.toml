@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 ratatui = "0.26.1"
 crossterm = "0.27.0"
-log = "0.4.20"
+log = "0.4.21"
 id3 = "1.13.1"
 rodio = "0.17.3"
 minimp3 = "0.5.1"
