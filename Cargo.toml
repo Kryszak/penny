@@ -10,7 +10,7 @@ log = "0.4.21"
 id3 = "1.13.1"
 rodio = "0.17.3"
 minimp3 = "0.5.1"
-clap = { version = "4.5.2", features = ["derive"] }
+clap = { version = "4.5.3", features = ["derive"] }
 rustfft = "6.2.0"
 notify-rust = "4.10.0"
 mp3-duration = "0.1.10"
