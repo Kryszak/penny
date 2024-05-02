@@ -17,7 +17,7 @@ mp3-duration = "0.1.10"
 chrono = { version = "0.4.38", default-features = false, features = ["clock"] }
 lazy_static = "1.4.0"
 fxhash = "0.2.1"
-parking_lot = "0.12.1"
+parking_lot = "0.12.2"
 
 [dev-dependencies]
 tempdir = "0.3.7"
