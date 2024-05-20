@@ -101,7 +101,7 @@ impl FileViewerList {
             match FileViewerList::list_directory_content(&entry.path) {
                 Ok(items) => {
                     self.parent_selected_index = self.state.selected();
-                    self.current_directory = entry.path.clone();
+                    self.current_directory.clone_from(&entry.path);
                     self.items = items;
                     self.focus_first_entry_if_available();
                 }
