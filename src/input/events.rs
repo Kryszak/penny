@@ -1,4 +1,4 @@
-use crossterm::event::{self, KeyCode, KeyEvent, KeyModifiers};
+use crossterm::event::{self, KeyCode, KeyEvent};
 use std::{
     sync::{
         atomic::{AtomicBool, Ordering},
@@ -12,14 +12,12 @@ use std::{
 // Combination of keys pressed in app
 pub struct KeyPress {
     pub key: KeyCode,
-    pub modifiers: KeyModifiers,
 }
 
 impl KeyPress {
     pub fn new(key_event: KeyEvent) -> Self {
         KeyPress {
             key: key_event.code,
-            modifiers: key_event.modifiers,
         }
     }
 }
