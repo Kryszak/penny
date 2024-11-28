@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 use application::App;
 use clap::Parser;
 use cli::config::Config;

@@ -2,20 +2,19 @@ use super::{app::VisualizationStyle, App};
 use crate::queue::SongFile;
 use crate::{files::FileEntry, player::Mp3Player};
 use ratatui::style::Style;
-use ratatui::widgets::Block;
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier},
     symbols,
     text::{Line, Span},
     widgets::{
-        Axis, BarChart, BorderType, Borders, Chart, Dataset, Gauge, GraphType, List, ListItem,
-        Paragraph,
+        Axis, BarChart, Block, BorderType, Borders, Chart, Dataset, Gauge, GraphType, List,
+        ListItem, Paragraph,
     },
     Frame,
 };
-use tui_logger::TuiLoggerWidget;
 use std::vec;
+use tui_logger::TuiLoggerWidget;
 
 /// Render UI based on application state
 pub fn ui(f: &mut Frame, app: &mut App) {
@@ -26,7 +25,7 @@ pub fn ui(f: &mut Frame, app: &mut App) {
         .direction(Direction::Vertical)
         .margin(1)
         .constraints([main_view_constraint, now_playing_view_constraint].as_ref())
-        .split(f.size());
+        .split(f.area());
 
     let (main_view_area, player_area) = (chunks[0], chunks[1]);
 
