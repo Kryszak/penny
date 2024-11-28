@@ -1,6 +1,3 @@
-#[macro_use]
-extern crate lazy_static;
-
 use application::App;
 use clap::Parser;
 use cli::config::Config;
@@ -17,7 +14,6 @@ mod cli;
 mod external;
 mod files;
 mod input;
-mod logger;
 mod player;
 mod queue;
 mod runner;
