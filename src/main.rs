@@ -17,7 +17,6 @@ mod cli;
 mod external;
 mod files;
 mod input;
-mod logger;
 mod player;
 mod queue;
 mod runner;
