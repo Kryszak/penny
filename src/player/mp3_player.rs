@@ -6,6 +6,7 @@ use crate::{
     queue::SongFile,
 };
 use log::{debug, error};
+use minimp3_fixed as minimp3;
 use minimp3::{Decoder, Error};
 use rodio::{OutputStream, Sink};
 use std::{

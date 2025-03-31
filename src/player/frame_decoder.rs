@@ -1,3 +1,4 @@
+use minimp3_fixed as minimp3;
 use minimp3::Frame;
 use rodio::Source;
 use std::time::Duration;
