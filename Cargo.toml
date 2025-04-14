@@ -12,7 +12,7 @@ rodio = "0.20.1"
 minimp3_fixed = "0.5.4"
 clap = { version = "4.5.35", features = ["derive"] }
 rustfft = "6.2.0"
-notify-rust = "4.11.6"
+notify-rust = "4.11.7"
 mp3-duration = "0.1.10"
 chrono = { version = "0.4.40", default-features = false, features = ["clock"] }
 tui-logger = "0.17.0"
