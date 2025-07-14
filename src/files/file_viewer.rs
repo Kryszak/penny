@@ -47,7 +47,7 @@ impl FileViewerList {
             Action::ViewerDown => self.next(),
             Action::FileViewerDirUp => self.go_directory_up(),
             Action::FileViewerEnterDir => self.enter_directory(),
-            _ => error!("Unsupported file viewer action: {:?}", action),
+            _ => error!("Unsupported file viewer action: {action:?}"),
         }
     }
 
