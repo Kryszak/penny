@@ -82,7 +82,7 @@ impl Mp3Player {
         match action {
             Action::TogglePlayback => self.toggle_playback(),
             Action::StopPlayback => self.stop_playback(false),
-            _ => error!("Action {:?} is not supported for Mp3Player!", action),
+            _ => error!("Action {action:?} is not supported for Mp3Player!"),
         }
     }
 
@@ -181,7 +181,7 @@ impl Mp3Player {
                     }
                     Err(Error::Eof) => break,
                     Err(e) => {
-                        error!("{:?}", e);
+                        error!("{e:?}");
                         break;
                     }
                 }

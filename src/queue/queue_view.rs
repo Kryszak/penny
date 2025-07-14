@@ -25,7 +25,7 @@ impl QueueView {
             Action::DeleteFromQueue => self.remove_selected(),
             Action::PlayNextFromQueue => self.update_now_playing(UpdateDirection::Next),
             Action::PlayPreviousFromQueue => self.update_now_playing(UpdateDirection::Previous),
-            _ => error!("Unsupported queue viewer action: {:?}", action),
+            _ => error!("Unsupported queue viewer action: {action:?}"),
         }
     }
 

@@ -28,13 +28,13 @@ impl SongFile {
     pub fn display(&self) -> Vec<String> {
         let mut formatted = vec![];
         if let Some(a) = &self.metadata.artist {
-            formatted.push(format!("Artist: {}", a));
+            formatted.push(format!("Artist: {a}"));
         }
         let title = match &self.metadata.title {
             Some(t) => t,
             None => &self.metadata.file_path,
         };
-        formatted.push(format!("Title : {}", title));
+        formatted.push(format!("Title : {title}"));
 
         formatted
     }
