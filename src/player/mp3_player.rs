@@ -6,9 +6,8 @@ use crate::{
     queue::SongFile,
 };
 use log::{debug, error};
-use minimp3_fixed as minimp3;
 use minimp3::{Decoder, Error};
-use rodio::{OutputStream, Sink};
+use minimp3_fixed as minimp3;
 use std::{
     f64,
     fs::File,
@@ -153,8 +152,8 @@ impl Mp3Player {
         let mut decoder = self.get_file_decoder();
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
-            let (_stream, stream_handle) = OutputStream::try_default().unwrap();
-            let sink = Sink::try_new(&stream_handle).unwrap();
+            let stream_handle = rodio::OutputStreamBuilder::open_default_stream().unwrap();
+            let sink = rodio::Sink::connect_new(stream_handle.mixer());
             let mut spectrum_analyzer = SpectrumAnalyzer::new();
             loop {
                 if should_stop.load(Ordering::Relaxed) {
@@ -175,7 +174,7 @@ impl Mp3Player {
                         {
                             *spectrum_data.lock().unwrap() = spectrum_analyzer.analyze(&frame.data);
                         }
-                        frame_duration = frame.get_duration() - Duration::from_millis(2);
+                        frame_duration = frame.get_duration();
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }
@@ -185,7 +184,7 @@ impl Mp3Player {
                         break;
                     }
                 }
-                std::thread::sleep(frame_duration);
+                // std::thread::sleep(frame_duration);
                 {
                     *playback_progress.lock().unwrap() += frame_duration.as_millis() as f64;
                 }
