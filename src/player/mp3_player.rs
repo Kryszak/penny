@@ -152,7 +152,8 @@ impl Mp3Player {
         let mut decoder = self.get_file_decoder();
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
-            let stream_handle = rodio::OutputStreamBuilder::open_default_stream().unwrap();
+            let mut stream_handle = rodio::OutputStreamBuilder::open_default_stream().unwrap();
+            stream_handle.log_on_drop(false);
             let sink = rodio::Sink::connect_new(stream_handle.mixer());
             let mut spectrum_analyzer = SpectrumAnalyzer::new();
             loop {
@@ -174,7 +175,7 @@ impl Mp3Player {
                         {
                             *spectrum_data.lock().unwrap() = spectrum_analyzer.analyze(&frame.data);
                         }
-                        frame_duration = frame.get_duration();
+                        frame_duration = frame.get_duration() - Duration::from_millis(1);
                         let source = FrameDecoder::new(frame);
                         sink.append(source);
                     }
@@ -184,7 +185,7 @@ impl Mp3Player {
                         break;
                     }
                 }
-                // std::thread::sleep(frame_duration);
+                std::thread::sleep(frame_duration);
                 {
                     *playback_progress.lock().unwrap() += frame_duration.as_millis() as f64;
                 }

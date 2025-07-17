@@ -1,6 +1,6 @@
 use minimp3::Frame;
 use minimp3_fixed as minimp3;
-use rodio::Source;
+use rodio::{cpal::Sample, Source};
 use std::time::Duration;
 
 /// Implementation of Rodio's [Source](rodio::Source) trait
@@ -51,10 +51,10 @@ impl Iterator for FrameDecoder {
             return None;
         }
 
-        let v = self.frame.data[self.current_frame_offset] as f32;
+        let v = self.frame.data[self.current_frame_offset];
         self.current_frame_offset += 1;
 
-        Some(v)
+        Some(v.to_sample())
     }
 }
 
