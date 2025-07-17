@@ -1,6 +1,6 @@
-use minimp3_fixed as minimp3;
 use minimp3::Frame;
-use rodio::Source;
+use minimp3_fixed as minimp3;
+use rodio::{cpal::Sample, Source};
 use std::time::Duration;
 
 /// Implementation of Rodio's [Source](rodio::Source) trait
@@ -26,10 +26,6 @@ impl FrameDecoder {
 }
 
 impl Source for FrameDecoder {
-    fn current_frame_len(&self) -> Option<usize> {
-        Some(self.frame.data.len())
-    }
-
     fn channels(&self) -> u16 {
         self.frame.channels as _
     }
@@ -41,10 +37,14 @@ impl Source for FrameDecoder {
     fn total_duration(&self) -> Option<Duration> {
         None
     }
+
+    fn current_span_len(&self) -> Option<usize> {
+        Some(self.frame.data.len())
+    }
 }
 
 impl Iterator for FrameDecoder {
-    type Item = i16;
+    type Item = f32;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.current_frame_offset == self.frame.data.len() {
@@ -54,7 +54,7 @@ impl Iterator for FrameDecoder {
         let v = self.frame.data[self.current_frame_offset];
         self.current_frame_offset += 1;
 
-        Some(v)
+        Some(v.to_sample())
     }
 }
 
