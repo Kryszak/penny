@@ -211,7 +211,7 @@ fn draw_player_panel(f: &mut Frame, app: &mut App, area: Rect) {
     );
 }
 
-fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
+fn draw_song_info(player: &mut Mp3Player) -> Paragraph<'_> {
     let lines: Vec<Line> = player
         .display_information()
         .into_iter()
@@ -222,7 +222,7 @@ fn draw_song_info(player: &mut Mp3Player) -> Paragraph {
         .style(Style::default().remove_modifier(Modifier::BOLD))
 }
 
-fn draw_song_progress(player: &Mp3Player, color: Color) -> Gauge {
+fn draw_song_progress(player: &Mp3Player, color: Color) -> Gauge<'_> {
     let label = player
         .get_text_progress()
         .unwrap_or_else(|| String::from("-/-"));
