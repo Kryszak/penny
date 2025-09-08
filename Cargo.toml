@@ -14,7 +14,7 @@ clap = { version = "4.5.46", features = ["derive"] }
 rustfft = "6.4.0"
 notify-rust = "4.11.7"
 mp3-duration = "0.1.10"
-chrono = { version = "0.4.41", default-features = false, features = ["clock"] }
+chrono = { version = "0.4.42", default-features = false, features = ["clock"] }
 tui-logger = "0.17.0"
 
 [dev-dependencies]
