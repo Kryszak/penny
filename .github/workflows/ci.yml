@@ -21,6 +21,8 @@ jobs:
           version: 1.0
       - name: Prepare rust toolchain
         uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          components: clippy
       - name: Run tests
         run: cargo test
       - name: Build app
