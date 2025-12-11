@@ -1,5 +1,5 @@
-# List available devices
-default:
+[default]
+_list_available:
     @just --list --unsorted
 
 # Run tests
