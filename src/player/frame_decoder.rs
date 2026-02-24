@@ -1,7 +1,10 @@
 use minimp3::Frame;
 use minimp3_fixed as minimp3;
 use rodio::{cpal::Sample, Source};
-use std::time::Duration;
+use std::{
+    num::NonZero,
+    time::Duration,
+};
 
 /// Implementation of Rodio's [Source](rodio::Source) trait
 /// for feeding [Sink](rodio::Sink) one frame at a time.
@@ -26,12 +29,12 @@ impl FrameDecoder {
 }
 
 impl Source for FrameDecoder {
-    fn channels(&self) -> u16 {
-        self.frame.channels as _
+    fn channels(&self) -> NonZero<u16> {
+        NonZero::new(self.frame.channels as _).expect("Failed to convert to u16")
     }
 
-    fn sample_rate(&self) -> u32 {
-        self.frame.sample_rate as _
+    fn sample_rate(&self) -> NonZero<u32> {
+        NonZero::new(self.frame.sample_rate as _).expect("mp3's have a non zero sample rate")
     }
 
     fn total_duration(&self) -> Option<Duration> {
