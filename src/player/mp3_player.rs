@@ -153,7 +153,7 @@ impl Mp3Player {
         notify_playback_start(self.song.as_ref().unwrap());
         thread::spawn(move || {
             let sink = rodio::DeviceSinkBuilder::open_default_sink().unwrap();
-            let player = rodio::Player::connect_new(&sink.mixer());
+            let player = rodio::Player::connect_new(sink.mixer());
             let mut spectrum_analyzer = SpectrumAnalyzer::new();
             loop {
                 if should_stop.load(Ordering::Relaxed) {
