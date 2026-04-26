@@ -1,4 +1,5 @@
 ![Build Status](https://github.com/Kryszak/penny/actions/workflows/ci.yml/badge.svg)
+[![Codacy Badge](https://app.codacy.com/project/badge/Grade/a06c32c97cb340c3b5b2f4c8bdd5af15)](https://app.codacy.com/gh/Kryszak/penny/dashboard?utm_source=gh&utm_medium=referral&utm_content=&utm_campaign=Badge_grade)
 
 # Penny
 Linux Tui MP3 player
