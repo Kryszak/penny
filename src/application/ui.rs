@@ -179,7 +179,7 @@ fn draw_player_panel(f: &mut Frame, app: &mut App, area: Rect) {
             [
                 Constraint::Percentage(40),
                 Constraint::Percentage(58),
-                Constraint::Percentage(2),
+                Constraint::Percentage(10),
             ]
             .as_ref(),
         )
@@ -227,9 +227,9 @@ fn draw_song_progress(player: &Mp3Player, color: Color) -> Gauge<'_> {
         .get_text_progress()
         .unwrap_or_else(|| String::from("-/-"));
     Gauge::default()
-        .block(Block::default())
+        .style(Modifier::BOLD)
         .gauge_style(Style::default().fg(color))
-        .ratio(player.get_current_song_percentage_progress())
+        .percent(player.get_current_song_percentage_progress())
         .label(Span::styled(
             label,
             Style::default()

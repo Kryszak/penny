@@ -113,15 +113,20 @@ impl Mp3Player {
         }
     }
 
-    /// Returns normalized fraction of finished playback [0..1]
-    pub fn get_current_song_percentage_progress(&self) -> f64 {
+    /// Returns percentage fraction of finished playback [0..1]
+    pub fn get_current_song_percentage_progress(&self) -> u16 {
         match &self.song {
             Some(s) => {
-                let current_progress_mutex = self.get_song_elapsed_seconds();
-                let song_length = s.duration.as_secs();
-                (current_progress_mutex / (song_length as f64)).min(1.0)
+                let current_progress = self.get_song_elapsed_seconds();
+                let song_length = s.duration.as_secs_f64();
+
+                if song_length == 0.0 {
+                    return 0;
+                }
+
+                ((current_progress / song_length).min(1.0) * 100.0) as u16
             }
-            None => 0.0,
+            None => 0,
         }
     }
 
