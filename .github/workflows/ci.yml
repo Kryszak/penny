@@ -20,7 +20,7 @@ jobs:
           packages: libasound2-dev
           version: 1.0
       - name: Prepare rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
+        uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
           components: clippy
       - name: Prepare just
